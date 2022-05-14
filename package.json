@@ -1,0 +1,21 @@
+{
+  "name": "tinkoff-invest-robot-contest",
+  "version": "1.0.0",
+  "description": "Пример торговой системы, работающей на API Тинькофф Инвестиций для Tinkoff Invest Robot Contest",
+  "main": "index.js",
+  "scripts": {
+    "start:dev": "nodemon",
+    "build": "rimraf ./build && tsc",
+    "start": "npm run build && node build/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^17.0.33",
+    "nodemon": "^2.0.16",
+    "rimraf": "^3.0.2",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.4"
+  }
+}
