@@ -5,8 +5,9 @@ const parseArgs = () => {
 
     return {
         token: process.env.TOKEN,
-        isSandbox: process.env.IS_SANDBOX?.toLowerCase() === 'true',
-        accountName: process.env.ACCOUNT_NAME,
+        mode: process.env.MODE || 'SANDBOX',
+        liveAccountName: process.env.LIVE_ACCOUNT_NAME,
+        strategy: process.env.STRATEGY,
     };
 };
 
