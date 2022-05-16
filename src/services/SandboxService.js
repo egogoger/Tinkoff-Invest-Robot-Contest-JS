@@ -24,4 +24,8 @@ const getSandboxOrders = async (api, accountId) => {
     return (await api.Sandbox.GetSandboxOrders({ account_id: accountId })).orders;
 };
 
-module.exports = { getOrCreateSandboxAccId, getSandboxPortfolio, getSandboxOrders };
+const postSandboxOrder = async (api, { figi, quantity, price, direction, account_id, order_type, order_id }) => {
+    return await api.Sandbox.PostSandboxOrder({ figi, quantity, price, direction, account_id, order_type, order_id });
+};
+
+module.exports = { getOrCreateSandboxAccId, getSandboxPortfolio, getSandboxOrders, postSandboxOrder };

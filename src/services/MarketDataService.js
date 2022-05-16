@@ -1,6 +1,9 @@
 const getCandles = async (api, figi, from, to, interval) => {
-    return console.log(Object.keys(api));
-    // return (await api.MarketData.GetCandles({ figi, from, to, interval })).candles;
+    return (await api.MarketData.GetCandles({ figi, from, to, interval })).candles;
 };
 
-module.exports = { getCandles };
+const getLastPrices = async (api, figi) => {
+    return (await api.MarketData.GetLastPrices({ figi })).last_prices;
+};
+
+module.exports = { getCandles, getLastPrices };
