@@ -7,8 +7,14 @@ const isExchangeOpen = async (api, exchangeName) => {
     return Boolean(exchange.days[0].is_trading_day);
 };
 
-const getAvailableETFs = async (api) => {
-    return (await api.Instruments.Etfs({ instrument_status: 'INSTRUMENT_STATUS_BASE' })).instruments;
+/**
+ *
+ * @param api
+ * @param {'Etfs' | 'Shares' | 'Bonds'} name
+ * @returns {Promise<*>}
+ */
+const getAvailable = async (api, name) => {
+    return (await api.Instruments[name]({ instrument_status: 'INSTRUMENT_STATUS_BASE' })).instruments;
 };
 
-module.exports = { isExchangeOpen, getAvailableETFs };
+module.exports = { isExchangeOpen, getAvailable };
