@@ -1,5 +1,4 @@
 node_modules
-build
 .env
 .idea
 orders_to_candles.json

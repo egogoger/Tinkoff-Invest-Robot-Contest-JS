@@ -1,20 +1,46 @@
-const endOfDay = require('date-fns/endOfDay')
+const { endOfDay } = require('date-fns');
+const { log } = require('../utils/logger');
 
-const isExchangeOpen = async (api, exchangeName) => {
-    const exchanges = (await api.Instruments.TradingSchedules({ to: endOfDay(new Date()), from: new Date() })).exchanges;
-    const exchange = exchanges.find(exs => exs.exchange === exchangeName);
-    if (!exchange) throw new Error('exchange not found');
-    return Boolean(exchange.days[0].is_trading_day);
-};
+class InstrumentsService {
+    constructor(api) {
+        this.api = api;
+    }
 
-/**
- *
- * @param api
- * @param {'Etfs' | 'Shares' | 'Bonds'} name
- * @returns {Promise<*>}
- */
-const getAvailable = async (api, name) => {
-    return (await api.Instruments[name]({ instrument_status: 'INSTRUMENT_STATUS_BASE' })).instruments;
-};
+    async isExchangeOpen(exchangeName) {
+        const exchange = (
+            await log(this.api.Instruments.TradingSchedules, 'api.Instruments.TradingSchedules', {
+                to: endOfDay(new Date()),
+                from: new Date(),
+            })
+        ).exchanges.find(exs => exs.exchange === exchangeName);
 
-module.exports = { isExchangeOpen, getAvailable };
+        if (!exchange) throw new Error('exchange not found');
+
+        return Boolean(exchange.days[0].is_trading_day);
+    }
+
+    /**
+     * Возвращает доступные инструменты для торговли
+     * @param {'Etfs' | 'Shares' | 'Bonds'} name
+     * @returns {Promise<*>}
+     */
+    async getAvailable(name) {
+        return (
+            await log(this.api.Instruments[name], `api.Instruments.${name}`, {
+                instrument_status: 'INSTRUMENT_STATUS_BASE',
+            })
+        ).instruments;
+    }
+
+    async getShare(ticker) {
+        return (
+            await log(this.api.Instruments.ShareBy, 'api.Instruments.ShareBy', {
+                id_type: 'INSTRUMENT_ID_TYPE_TICKER',
+                class_code: 'Equities',
+                id: ticker,
+            })
+        ).instrument;
+    }
+}
+
+module.exports = InstrumentsService;

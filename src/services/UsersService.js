@@ -1,15 +1,25 @@
-const isAvailableAcc = account => account.status === 'ACCOUNT_STATUS_OPEN' && account.access_level === 'ACCOUNT_ACCESS_LEVEL_FULL_ACCESS'
+const { log } = require('../utils/logger');
 
-const availableAccounts = (accounts) => {
-    return accounts.filter(isAvailableAcc);
-}; 
+class UsersService {
+    constructor(api) {
+        this.api = api;
+    }
 
-const getAccountId = async (api, accName) => {
-    const accounts = (await api.Users.GetAccounts({})).accounts;
-    const acc = accName ? accounts.find(a => a.name === accName) : availableAccounts(accounts)[0];
-    if (!acc) throw new Error('no account');
-    if (!isAvailableAcc(acc)) throw new Error('not available account');
-    return acc.id;
-};
+    async getAccountId(api, accName) {
+        const accounts = (await log(this.api.Users.GetAccounts, 'api.Users.GetAccounts', {})).accounts;
+        const acc = accName ? accounts.find(a => a.name === accName) : UsersService.availableAccounts(accounts)[0];
+        if (!acc) throw new Error('no account');
+        if (!UsersService.isAvailableAcc(acc)) throw new Error('not available account');
+        return acc.id;
+    }
 
-module.exports = { getAccountId };
+    static availableAccounts(accounts) {
+        return accounts.filter(UsersService.isAvailableAcc);
+    }
+
+    static isAvailableAcc(account) {
+        return account.status === 'ACCOUNT_STATUS_OPEN' && account.access_level === 'ACCOUNT_ACCESS_LEVEL_FULL_ACCESS';
+    }
+}
+
+module.exports = UsersService;
