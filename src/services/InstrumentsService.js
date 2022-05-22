@@ -33,13 +33,7 @@ class InstrumentsService {
     }
 
     async getShare(ticker) {
-        return (
-            await log(this.api.Instruments.ShareBy, 'api.Instruments.ShareBy', {
-                id_type: 'INSTRUMENT_ID_TYPE_TICKER',
-                class_code: 'Equities',
-                id: ticker,
-            })
-        ).instrument;
+        return (await this.getAvailable('Shares')).find(share => share.ticker === ticker);
     }
 }
 

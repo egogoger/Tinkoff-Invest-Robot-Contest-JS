@@ -15,6 +15,15 @@ const MinutesInCandles = {
     [CandleIntervals.Day]: 24 * 60,
 };
 
+/** @see https://tinkoff.github.io/investAPI/load_history */
+const MaximumMinutesForCandlesRequest = {
+    [CandleIntervals.Min1]: 24 * 60,
+    [CandleIntervals.Min5]: 24 * 60,
+    [CandleIntervals.Min15]: 24 * 60,
+    [CandleIntervals.Hour]: 7 * 24 * 60,
+    [CandleIntervals.Day]: 365 * 24 * 60,
+};
+
 const OrderStatuses = {
     UNSPECIFIED: 'EXECUTION_REPORT_STATUS_UNSPECIFIED',
     FILL: 'EXECUTION_REPORT_STATUS_FILL',
@@ -24,4 +33,4 @@ const OrderStatuses = {
     PARTIALLYFILL: 'EXECUTION_REPORT_STATUS_PARTIALLYFILL',
 };
 
-module.exports = { CandleIntervals, MinutesInCandles, OrderStatuses };
+module.exports = { CandleIntervals, MinutesInCandles, OrderStatuses, MaximumMinutesForCandlesRequest };

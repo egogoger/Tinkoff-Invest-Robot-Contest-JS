@@ -1,7 +1,8 @@
 const { CandleIntervals, OrderStatuses } = require('../../types');
-const bd = require('../../bd/bd');
+const bd = require('../../bd');
 const StrategyBase = require('../StrategyBase');
 const { log } = require('../../utils/logger');
+const { getCandleColor } = require('../../utils/candles');
 
 class BarUpDnStrategy extends StrategyBase {
     orderSizePercent = 1;
@@ -47,15 +48,24 @@ class BarUpDnStrategy extends StrategyBase {
         }
     }
 
-    async runBackTest() {}
+    /**
+     * Возвращает направление ордера
+     * @param {Candle} prevCandle
+     * @param {Candle} currCandle
+     * @returns {'ORDER_DIRECTION_BUY' | 'ORDER_DIRECTION_SELL' | undefined}
+     */
+    getOrderDirectionFromCandles(prevCandle, currCandle) {
+        const prevCandleColor = getCandleColor(prevCandle);
 
-    async runLive() {
-        const accId = await this.UsersService.getAccountId();
-        const isMarketOpen = await this.InstrumentsService.isExchangeOpen(this.exchange);
-
-        if (isMarketOpen) {
-            console.log('start');
+        if (prevCandleColor === 'GREEN' && prevCandle.close < currCandle.open) {
+            return 'ORDER_DIRECTION_BUY';
         }
+
+        if (prevCandleColor === 'RED' && prevCandle.close > currCandle.open) {
+            return 'ORDER_DIRECTION_SELL';
+        }
+
+        return undefined;
     }
 
     get maxOrders() {

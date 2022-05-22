@@ -75,20 +75,9 @@ class BarUpDnSandbox extends BarUpDnStrategy {
             const lotPrice = lotPrices[i];
             const prevCandle = lastCandles[i][0];
             const currCandle = lastCandles[i][1];
-            const prevCandleColor = candleColor(prevCandle);
 
-            let orderDirection;
-            if (prevCandleColor === 'GREEN' && prevCandle.close < currCandle.open) {
-                orderDirection = 'ORDER_DIRECTION_BUY';
-                console.log('buy');
-            } else if (prevCandleColor === 'RED' && prevCandle.close > currCandle.open && short_enabled_flag) {
-                orderDirection = 'ORDER_DIRECTION_SELL';
-                console.log('sell');
-                continue; // TODO: think about shorts
-            } else {
-                console.log('skip');
-                // continue;
-            }
+            // todo: short_enabled_flag
+            let orderDirection = this.getOrderDirectionFromCandles(prevCandle, currCandle);
 
             const portfolio = await this.SandboxService.getSandboxPortfolio();
             const capital = this.api.decimal2money(portfolio.total_amount_currencies).units;

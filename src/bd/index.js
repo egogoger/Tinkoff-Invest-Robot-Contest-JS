@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 
 const ORDERS_TO_CANDLES = 'orders_to_candles.json';
 
@@ -30,7 +31,6 @@ class bd {
     saveOrderAndCandle(orderId, candleTime) {
         const ordersToCandles = JSON.parse(fs.readFileSync(ORDERS_TO_CANDLES, 'utf8'));
         ordersToCandles.push({ orderId, candleTime });
-        debugger;
         fs.writeFileSync(ORDERS_TO_CANDLES, JSON.stringify(ordersToCandles, null, 4));
     }
 
@@ -45,6 +45,22 @@ class bd {
                 }
             }
         });
+    }
+
+    getFileNameForCachedCandles({ figi, ticker, from, to, candleInterval }) {
+        return `${figi}__${ticker}__${from}__${to}__${candleInterval}`;
+    }
+
+    getCachedCandles(fileName) {
+        const pathToFile = path.resolve(__dirname, `${fileName}.json`);
+
+        if (!fs.existsSync(pathToFile)) return undefined;
+
+        return JSON.parse(fs.readFileSync(pathToFile, 'utf8'));
+    }
+
+    save(data, fileName) {
+        fs.writeFileSync(path.resolve(__dirname, `${fileName}.json`), JSON.stringify(data, null, 4));
     }
 }
 
