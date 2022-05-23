@@ -6,8 +6,10 @@
   "type": "commonjs",
   "scripts": {
     "backtest": "MODE=BACKTEST node src/index.js",
-    "dev": "nodemon --watch src src/index.js",
+    "sandbox": "MODE=SANDBOX node src/index.js",
+    "live": "MODE=LIVE node src/index.js",
     "start": "node src/index.js",
+    "dev": "nodemon --watch src src/index.js",
     "postinstall": "cd libs/unofficial-tinkoff-invest-api_v2-lazy-sdk-NODEJS && npm install && cd ../../"
   },
   "author": "egogoger",

@@ -24,13 +24,11 @@ class BarUpDnLive extends BarUpDnStrategy {
     async start() {
         const isMarketOpen = await this.InstrumentsService.isExchangeOpen(this.exchange);
 
-        if (!isMarketOpen) throw new Error('market is closed'); // todo: calculate time till open and setTimeout
+        if (!isMarketOpen) throw new Error('market is closed');
 
         await this.setup();
 
         await this.run();
-
-        setInterval(() => {}, 1 << 30);
     }
 
     async setup() {

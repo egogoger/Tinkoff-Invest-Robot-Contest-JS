@@ -1,7 +1,5 @@
 const SandboxService = require('../../services/SandboxService');
 const BarUpDnStrategy = require('./Base');
-const { candleColor } = require('../../utils/candles');
-const { log } = require('../../utils/logger');
 
 class BarUpDnSandbox extends BarUpDnStrategy {
     constructor(api) {
@@ -12,7 +10,7 @@ class BarUpDnSandbox extends BarUpDnStrategy {
     async start() {
         const isMarketOpen = await this.InstrumentsService.isExchangeOpen(this.exchange);
 
-        // if (!isMarketOpen) throw new Error('market is closed'); // todo: calculate time till open and setTimeout
+        if (!isMarketOpen) throw new Error('market is closed');
 
         await this.SandboxService.setup();
 
@@ -24,43 +22,7 @@ class BarUpDnSandbox extends BarUpDnStrategy {
 
         if (orders.length >= this.maxOrders) return; // todo: setTimeout or subscribe
 
-        // const shares = (await getAvailable(this.api, 'Shares')).filter(share => share.exchange === this.exchange && share.api_trade_available_flag);
-        const shares = [
-            {
-                figi: 'BBG000MZL2S9',
-                ticker: 'PMSBP',
-                class_code: 'TQBR',
-                isin: 'RU000A0ET156',
-                lot: 2,
-                currency: 'rub',
-                klong: null,
-                kshort: null,
-                dlong: null,
-                dshort: null,
-                dlong_min: null,
-                dshort_min: null,
-                short_enabled_flag: false,
-                name: 'Пермэнергосбыт - акции привилегированные',
-                exchange: 'MOEX',
-                ipo_date: '2005-06-21T00:00:00.000Z',
-                issue_size: 11353500,
-                country_of_risk: 'RU',
-                country_of_risk_name: 'Российская Федерация',
-                sector: 'utilities',
-                issue_size_plan: 11353500,
-                nominal: '3.25 rub',
-                trading_status: 'SECURITY_TRADING_STATUS_BREAK_IN_TRADING',
-                otc_flag: false,
-                buy_available_flag: true,
-                sell_available_flag: true,
-                div_yield_flag: true,
-                share_type: 'SHARE_TYPE_PREFERRED',
-                min_price_increment: 0.2,
-                api_trade_available_flag: true,
-                uid: '',
-                real_exchange: 'REAL_EXCHANGE_MOEX',
-            },
-        ];
+        const shares = (await this.InstrumentsService.getAvailable('Shares')).filter(share => share.exchange === this.exchange && share.api_trade_available_flag);
         const lastCandles = (
             await Promise.all(
                 shares.map(share => this.MarketDataService.getLastNCandles(share.figi, 2, this.candleInterval)),
@@ -71,13 +33,13 @@ class BarUpDnSandbox extends BarUpDnStrategy {
         );
 
         for (let i = 0; i < shares.length; i++) {
-            const { figi, short_enabled_flag } = shares[i];
+            const { figi } = shares[i];
             const lotPrice = lotPrices[i];
             const prevCandle = lastCandles[i][0];
             const currCandle = lastCandles[i][1];
 
-            // todo: short_enabled_flag
             let orderDirection = this.getOrderDirectionFromCandles(prevCandle, currCandle);
+            if (orderDirection !== 'ORDER_DIRECTION_BUY') continue;
 
             const portfolio = await this.SandboxService.getSandboxPortfolio();
             const capital = this.api.decimal2money(portfolio.total_amount_currencies).units;
@@ -88,11 +50,6 @@ class BarUpDnSandbox extends BarUpDnStrategy {
                 console.warn(`not enough money to buy lots:\n\torderSize: ${orderSize}\n\tlotPrice: ${lotPrice}\n`);
                 continue;
             }
-
-            // ------------------
-            // Выставление заявки
-            // ------------------
-            orderDirection = 'ORDER_DIRECTION_BUY'; // todo: remove
 
             if (
                 await this.tradeExists(
@@ -115,7 +72,10 @@ class BarUpDnSandbox extends BarUpDnStrategy {
                 order_id: `${figi}_${currCandle.time}_${orderDirection}`,
             });
 
-            this.bd.saveOrderAndCandle(order.order_id, currCandle.time.toISOString());
+            this.bd.save({
+                order_id: order.order_id,
+                candleTime: currCandle.time.toISOString()
+            }, this.bd.PATHS.CANDLES, 'orders_to_candles');
         }
     }
 }
