@@ -29,14 +29,14 @@ npm run backtest -- --strat BarUpDn --ticker VTBR --from 2021-11-22 --to 2022-01
 [Пример отчёта](https://htmlpreview.github.io/?https://github.com/egogoger/Tinkoff-Invest-Robot-Contest-JS/blob/master/examples/BarUpDn/example_report.html)
 ![backtest report example](examples/BarUpDn/report.jpg)
 
-# Песочница
-```
-npm run sandbox -- --strat BarUpDn
-```
-Песочница работает сразу на списке инструментов, вместо одного инструмента, как в бэктесте
-
 # Боевой режим
 ```
 npm run live -- --strat BarUpDn
 ```
 Боевой режим работает на одном инструменте на определённом количестве сделок
+
+# Песочница
+```
+npm run sandbox -- --strat BarUpDn
+```
+Песочница работает сразу на списке инструментов, вместо одного инструмента, как в бэктесте
