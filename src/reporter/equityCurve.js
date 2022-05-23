@@ -21,9 +21,9 @@
     });
 
     const areaSeries = chart.addAreaSeries({
-        topColor: 'rgba(251, 192, 45, 0.56)',
-        bottomColor: 'rgba(251, 192, 45, 0.04)',
-        lineColor: 'rgba(251, 192, 45, 1)',
+        topColor: 'rgba(5, 70, 204, 0.56)',
+        bottomColor: 'rgba(5, 70, 204, 0.04)',
+        lineColor: 'rgba(5, 70, 204, 1)',
         lineWidth: 2,
     });
 

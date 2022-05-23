@@ -31,7 +31,7 @@
             percent: 0,
         },
         buyHoldReturn: {
-            title: 'Прибыльность стратегии Buy & Hold',
+            title: 'Прибыльность стратегии Buy\u00a0&\u00a0Hold',
             value: 0,
             percent: 0,
         },
@@ -52,7 +52,7 @@
             percent: 0,
         },
         avgWinLoseRatio: {
-            title: 'Отношение средней прибыли к среднему убытку',
+            title: 'Отношение средней прибыли к\u00a0среднему убытку',
             value: 1,
         },
         largestWinningTrade: {

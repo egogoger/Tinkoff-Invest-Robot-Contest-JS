@@ -6,7 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "dev": "nodemon --watch src src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "postinstall": "cd libs/unofficial-tinkoff-invest-api_v2-lazy-sdk-NODEJS && npm install && cd ../../"
   },
   "author": "egogoger",
   "license": "Apache-2.0",

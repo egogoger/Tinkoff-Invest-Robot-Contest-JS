@@ -1,6 +1,17 @@
 const fs = require('fs');
 const path = require('path');
 
+const injectJS = template => {
+    const files = ['candlestickChart.js', 'equityCurve.js', 'stats.js'];
+
+    for (const file of files) {
+        const script = fs.readFileSync(path.resolve(__dirname, file), 'utf8');
+        template = template.replace(` src="${file}">`, `>\n${script}`);
+    }
+
+    return template;
+};
+
 const createReport = (title, candlesFileName, statsFileName) => {
     let template = fs.readFileSync(path.resolve(__dirname, 'reportTemplate.html'), 'utf8');
 
@@ -17,7 +28,9 @@ const createReport = (title, candlesFileName, statsFileName) => {
         template = template.replace(`{{${key}}}`, value);
     }
 
-    fs.writeFileSync(path.resolve(__dirname, 'report.html'), template);
+    template = injectJS(template);
+
+    fs.writeFileSync('report.html', template);
 };
 
 module.exports = { createReport };

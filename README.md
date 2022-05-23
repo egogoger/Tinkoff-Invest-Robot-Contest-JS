@@ -27,7 +27,7 @@ npm run backtest -- --strat BarUpDn --ticker VTBR --from 2021-11-22 --to 2022-01
 ## Результаты
 По окончанию тестирования в корне проекта генерируется html-файл с отчётом. В нём можно на "живом" графике отследить все сделки, а так же проанализировать основные показатели торговой стратегии
 
-[Пример отчёта](https://htmlpreview.github.io/?https://github.com/egogoger/Tinkoff-Invest-Robot-Contest-JS/blob/master/examples/BarUpDn/report.html)
+[Пример отчёта](https://htmlpreview.github.io/?https://github.com/egogoger/Tinkoff-Invest-Robot-Contest-JS/blob/master/examples/BarUpDn/example_report.html)
 ![backtest report example](examples/BarUpDn/report.png)
 
 # Песочница
