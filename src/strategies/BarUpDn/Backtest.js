@@ -5,9 +5,6 @@ const { inverseOrderDirection } = require('../../utils/order');
 const { createReport } = require('../../reporter');
 
 class BarUpDnBackTest extends BarUpDnStrategy {
-    fromDateKey = '2021-11-22';
-    toDateKey = '2022-01-20';
-    ticker = 'VTBR';
     capital = 100000;
     maxOrderDuration = 60 * 12;
 
@@ -15,10 +12,16 @@ class BarUpDnBackTest extends BarUpDnStrategy {
     openTrades = [];
     closedTrades = [];
 
-    async start() {
+    async setup() {
         this.timeOfRun = new Date();
-
+        this.fromDateKey = process.env.from || '2021-11-22';
+        this.toDateKey = process.env.to || '2022-01-20';
+        this.ticker = process.env.ticker || 'VTBR';
         await this.loadInstrument();
+    }
+
+    async start() {
+        await this.setup();
 
         const candles = await this.loadCandles();
 
@@ -68,7 +71,6 @@ class BarUpDnBackTest extends BarUpDnStrategy {
         this.saveResults();
 
         createReport(
-            'Отчёты',
             `${this.bd.PATHS.CANDLES}/${this.cachedCandlesFileName}`,
             `${this.bd.PATHS.BACKTEST}/${this.statsFileName}`,
         );

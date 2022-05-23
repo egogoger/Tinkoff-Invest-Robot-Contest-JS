@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "type": "commonjs",
   "scripts": {
+    "backtest": "MODE=BACKTEST node src/index.js",
     "dev": "nodemon --watch src src/index.js",
     "start": "node src/index.js",
     "postinstall": "cd libs/unofficial-tinkoff-invest-api_v2-lazy-sdk-NODEJS && npm install && cd ../../"
@@ -13,7 +14,8 @@
   "license": "Apache-2.0",
   "dependencies": {
     "date-fns": "^2.28.0",
-    "dotenv": "^16.0.1"
+    "dotenv": "^16.0.1",
+    "minimist": "^1.2.6"
   },
   "devDependencies": {
     "nodemon": "^2.0.16",

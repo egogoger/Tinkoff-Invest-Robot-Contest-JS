@@ -1,4 +1,3 @@
-const { INITIAL_SANDBOX_EQUITY } = require('../constants');
 const { log } = require('../utils/logger');
 
 class SandboxService {
@@ -29,7 +28,7 @@ class SandboxService {
         const newAccId = (await api.Sandbox.OpenSandboxAccount({})).account_id;
         await log(this.api.Sandbox.SandboxPayIn, 'api.Sandbox.SandboxPayIn', {
             account_id: newAccId,
-            amount: `${INITIAL_SANDBOX_EQUITY} rub`,
+            amount: '10000 rub',
         });
         return newAccId;
     }
