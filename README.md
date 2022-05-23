@@ -30,7 +30,12 @@ npm run backtest -- --strat BarUpDn --ticker VTBR --from 2021-11-22 --to 2022-01
 ![backtest report example](examples/BarUpDn/report.jpg)
 
 # Песочница
-// 
+```
+npm run sandbox -- --strat BarUpDn
+```
+1. Песочница работает сразу на списке инструментов, вместо одного инструмента, как в бэктесте
 
 # Боевой режим
-// todo
+```
+npm run live -- --strat BarUpDn
+```
