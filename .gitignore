@@ -2,7 +2,6 @@ node_modules
 .env
 .idea
 src/bd/storage
-orders_to_candles.json
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode
