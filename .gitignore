@@ -1,6 +1,7 @@
 node_modules
 .env
 .idea
+.DS_Store
 src/bd/storage
 report.html
 !examples/*
