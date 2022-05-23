@@ -7,7 +7,7 @@ const { getCandleColor } = require('../../utils/candles');
 class BarUpDnStrategy extends StrategyBase {
     orderSizePercent = 1;
     stopLossPercent = 30;
-    commissionPercent = 1;
+    commissionPercent = 0.01;
     slippage = 10;
     exchange = 'MOEX';
     candleInterval = CandleIntervals.Hour;

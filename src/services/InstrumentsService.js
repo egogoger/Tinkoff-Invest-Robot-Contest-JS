@@ -21,19 +21,32 @@ class InstrumentsService {
 
     /**
      * Возвращает доступные инструменты для торговли
-     * @param {'Etfs' | 'Shares' | 'Bonds'} name
+     * @param {'Shares' | 'Etfs' | 'Bonds' | 'Currencies' | 'Futures'} name
      * @returns {Promise<[]>}
      */
     async getAvailable(name) {
-        return (
-            await log(this.api.Instruments[name], `api.Instruments.${name}`, {
-                instrument_status: 'INSTRUMENT_STATUS_BASE',
-            })
-        ).instruments;
+        return log(this.api.Instruments[name], `api.Instruments.${name}`, {
+            instrument_status: 'INSTRUMENT_STATUS_BASE',
+        }).then(res => res.instruments);
     }
 
-    async getShare(ticker) {
-        return (await this.getAvailable('Shares')).find(share => share.ticker === ticker);
+    /**
+     * Возвращает идентификатор figi для заданного тикера
+     * @param {string} ticker
+     * @return {Promise<Share | Etf | Currency | Bond | Future | undefined>}
+     */
+    async getInstrument(ticker) {
+        for (const method of ['Shares', 'Etfs', 'Currencies', 'Bonds', 'Futures']) {
+            let instrument;
+            try {
+                const instruments = await this.getAvailable(method);
+                instrument = instruments.find(instr => instr.ticker === ticker);
+            } catch (e) {
+                console.log(e);
+            }
+
+            if (instrument) return instrument;
+        }
     }
 }
 

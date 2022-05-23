@@ -2,7 +2,7 @@
  * window: {
  *     LightweightCharts: Object,
  *     candles: [],
- *     equity: [],
+ *     series: [],
  *     timeFormatter: Function,
  * }
  */
@@ -77,8 +77,8 @@
     );
 
     const markers = [];
-    for (let i = 0; i < orders.length; i++) {
-        const { entry, close } = orders[i];
+    for (let i = 0; i < trades.length; i++) {
+        const { entry, exit } = trades[i];
 
         markers.push({
             time: new Date(entry.candleTime).getTime(),
@@ -88,7 +88,7 @@
             text: `#${i + 1}`,
         });
         markers.push({
-            time: new Date(close.candleTime).getTime(),
+            time: new Date(exit.candleTime).getTime(),
             position: 'aboveBar',
             color: '#e91e63',
             shape: 'arrowDown',

@@ -28,9 +28,9 @@
     });
 
     areaSeries.setData(
-        equity.map(eq => ({
-            time: new Date(eq.time).getTime(),
-            value: eq.value,
+        series.map(s => ({
+            time: new Date(s.time).getTime(),
+            value: s.equity,
         })),
     );
 

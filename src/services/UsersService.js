@@ -6,7 +6,7 @@ class UsersService {
     }
 
     /**
-     * Возвращает account_id
+     * Возвращает account_id для заданного названия аккаунта
      * @param {string} accName
      * @return {Promise<string>}
      */

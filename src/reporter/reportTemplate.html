@@ -7,133 +7,136 @@
   <style>
     * {
       box-sizing: border-box;
+      padding: 0;
+      margin: 0;
     }
 
     body {
       display: flex;
       justify-content: center;
-      background-color: azure;
+      background-color: #f0f5fb;
 
-      font-family: 'Helvetica', 'Arial', sans-serif
+      font-family: 'Helvetica', 'Arial', sans-serif;
+    }
+
+    .block {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    }
+
+    .chart {
+      padding: 24px;
+    }
+
+    .chart > h2 {
+      margin-bottom: 24px;
+    }
+
+    .chart > div {
+      width: calc(100% - 12px);
     }
 
     .Container {
-      width: 900px;
+      width: 1200px;
       margin: 12px 0;
-      background-color: white;
-      box-shadow: rgba(100, 100, 111, 0.2) 0 7px 29px 0;
-      overflow: hidden;
-      border-radius: 4px;
+      padding: 12px;
     }
 
-    h2 {
-      padding: 0 12px;
-      margin-bottom: 0;
-      border-bottom: 2px solid #2d2d2d;
+    .Dashboard {
+      display: flex;
     }
 
-    h2 + * {
-      padding: 0 12px;
+    .Charts {
+      width: calc(1200px - 300px - 12px);
+      margin-right: 24px;
     }
 
     .CandlesChart #candles {
-      width: calc(100% - 24px);
       height: 600px;
     }
 
-    #equity-curve {
-      width: calc(100% - 24px);
+    .EquityChart {
+      margin-top: 24px;
+    }
+
+    .EquityChart #equity-curve {
       height: 300px
+    }
+
+    h1 {
+      margin-bottom: 25px;
     }
   </style>
   <style>
-    .table-fill {
-      background: white;
-      border-collapse: collapse;
-      margin: auto;
+    .Stats {
+      width: calc(1200px - 900px - 12px);
+      height: 100%;
+      border-left: 12px solid white;
+      border-right: 12px solid white;
+    }
+
+    .stats-item {
       width: 100%;
+      position: relative;
+      display: flex;
     }
 
-    th {
-      color: #D5DDE5;
-      background: #1b1e24;
-      border-bottom:4px solid #9ea7af;
-      border-right: 1px solid #343a45;
-      font-size: 23px;
-      font-weight: 100;
-      padding:24px;
-      vertical-align:middle;
+    .stats-item > div {
+      width: 50%;
+      text-align: center;
+      vertical-align: center;
+      padding: 24px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
-    th:first-child {
-      border-top-left-radius:3px;
+    .stats-item > div:nth-child(1) {
+      padding-right: 12px;
     }
 
-    th:last-child {
-      border-top-right-radius:3px;
-      border-right:none;
+    .stats-item > div:nth-child(2) {
+      padding-left: 12px;
+      font-size: 1.3em;
     }
 
-    tr {
-      border-top: 1px solid #C1C3D1;
-      border-bottom: 1px solid #C1C3D1;
-      color:black;
-      font-size:16px;
-      font-weight:normal;
+    .stats-item:after {
+      content: '';
+      position: absolute;
+      top: 24px;
+      bottom: 24px;
+      left: calc(50% - 2px);
+      right: calc(50% - 2px);
+      border-radius: 8px;
+      background-color: #0546cc;
     }
 
-    tr:first-child {
-      border-top:none;
-    }
-
-    tr:last-child {
-      border-bottom:none;
-    }
-
-    tr:nth-child(odd) td {
-      background:#EBEBEB;
-    }
-
-    tr:last-child td:first-child {
-      border-bottom-left-radius:3px;
-    }
-
-    tr:last-child td:last-child {
-      border-bottom-right-radius:3px;
-    }
-
-    td {
-      background:#FFFFFF;
-      padding:20px;
-      text-align:left;
-      vertical-align:middle;
-      font-weight:300;
-      font-size:18px;
-      text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.1);
-      border-right: 1px solid #C1C3D1;
-    }
-
-    td:last-child {
-      border-right: 0;
+    .stats-item + .stats-item {
+      border-top: 1px solid #f0f5fb;
     }
   </style>
 </head>
 <body>
 <div class="Container">
-  <div class="CandlesChart">
-    <h2>Котировка</h2>
-    <div id="candles"></div>
-  </div>
-  <div>
-    <h2>Кривая капитала</h2>
-    <div id="equity-curve"></div>
-  </div>
-  <div>
-    <h2>Характеристики стратегии</h2>
-    <table id="stats-table" class="table-fill">
-      <tbody>
-      </tbody>
-    </table>
+  <h1>Характеристики стратегии</h1>
+  <div class="Dashboard">
+    <div class="Charts">
+      <div class="CandlesChart block chart">
+        <h2>График цены</h2>
+        <div id="candles"></div>
+      </div>
+      <div class="EquityChart block chart">
+        <h2>Кривая капитала</h2>
+        <div id="equity-curve"></div>
+      </div>
+    </div>
+    <div class="Stats block">
+      <table id="stats-table" class="table-fill">
+        <tbody>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -149,7 +152,7 @@ const timeFormatter = millis => {
     ].join('.');
 };
 const candles = {{CANDLES}};
-const { orders, equity } = {{STATS}};
+const { trades, series } = {{STATS}};
 </script>
 
 <script type="text/javascript" src="candlestickChart.js"></script>

@@ -29,6 +29,8 @@ class BarUpDnLive extends BarUpDnStrategy {
         await this.setup();
 
         await this.run();
+
+        setInterval(() => {}, 1 << 30);
     }
 
     async setup() {

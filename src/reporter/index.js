@@ -4,8 +4,8 @@ const path = require('path');
 const createReport = (title, candlesFileName, statsFileName) => {
     let template = fs.readFileSync(path.resolve(__dirname, 'reportTemplate.html'), 'utf8');
 
-    const candles = fs.readFileSync(path.resolve(__dirname, `../bd/storage/backtest/${candlesFileName}.json`), 'utf8');
-    const stats = fs.readFileSync(path.resolve(__dirname, `../bd/storage/backtest/${statsFileName}.json`), 'utf8');
+    const candles = fs.readFileSync(path.resolve(__dirname, `../bd/${candlesFileName}.json`), 'utf8');
+    const stats = fs.readFileSync(path.resolve(__dirname, `../bd/${statsFileName}.json`), 'utf8');
 
     const map = {
         TITLE: title,

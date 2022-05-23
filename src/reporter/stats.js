@@ -10,9 +10,9 @@
         return { value: totalReturns, percent: percentage(totalReturns, capital) };
     };
 
-    const tableTag = document.querySelector('#stats-table tbody');
-    if (!tableTag) return;
-    tableTag.innerHTML = '';
+    const statsTag = document.querySelector('#stats');
+    if (!statsTag) return;
+    statsTag.innerHTML = '';
 
     const statsMap = {
         netProfit: {
@@ -67,8 +67,8 @@
         },
     };
 
-    const initialCapital = equity[0].value;
-    const resultingCapital = equity[equity.length - 1].value;
+    const initialCapital = series[0].equity;
+    const resultingCapital = series[series.length - 1].equity;
 
     statsMap.buyHoldReturn = {
         ...statsMap.buyHoldReturn,
@@ -78,16 +78,14 @@
     statsMap.netProfit.value = resultingCapital - initialCapital;
     statsMap.netProfit.percent = percentage(statsMap.netProfit.value, initialCapital);
 
-    const sizesToDiffs = orders.map(({ entry, close }) => {
+    const sizesToDiffs = trades.map(({ entry, exit }) => {
         const entrySize = entry.quantity * entry.price;
-        const closeSize = close.quantity * close.price;
+        const exitSize = exit.quantity * exit.price;
 
-        const diff = closeSize - entrySize;
+        const diff = exitSize - entrySize;
 
         if (diff > 0) {
             statsMap.grossProfit.value += diff;
-            statsMap.grossProfit.percent = percentage(diff, initialCapital);
-
             statsMap.winningTrades.value++;
 
             if (diff > statsMap.largestWinningTrade.value) {
@@ -97,10 +95,8 @@
         } else {
             const diffAbs = Math.abs(diff);
 
-            statsMap.losingTrades.value++;
-
             statsMap.grossLoss.value += diffAbs;
-            statsMap.grossLoss.percent = percentage(diffAbs, initialCapital);
+            statsMap.losingTrades.value++;
 
             if (diffAbs > statsMap.largestLosingTrade.value) {
                 statsMap.largestLosingTrade.value = diffAbs;
@@ -110,6 +106,9 @@
 
         return percentage(diff, entrySize);
     });
+
+    statsMap.grossProfit.percent = percentage(statsMap.grossProfit.value, initialCapital);
+    statsMap.grossLoss.percent = percentage(statsMap.grossLoss.value, initialCapital);
 
     statsMap.avgWinningTrade.percent = average(sizesToDiffs.map(Number).filter(per => per > 0)).toFixed(2);
     statsMap.avgLosingTrade.percent = average(sizesToDiffs.map(Number).filter(per => per < 0)).toFixed(2);
@@ -121,6 +120,8 @@
         const value = stat.value ? Number(stat.value).toFixed(2).replace('.00', '') : undefined;
         const per = stat.percent ? stat.percent + '%' : '';
 
-        tableTag.innerHTML += `<tr><td>${stat.title}</td><td>${[value, per].filter(Boolean).join('</br>')}</td></tr>`;
+        statsTag.innerHTML += `<div class="stats-item"><div>${stat.title}</div><div>${[value, per]
+            .filter(Boolean)
+            .join('</br>')}</div></div>`;
     });
 })();

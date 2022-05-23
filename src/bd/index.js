@@ -26,21 +26,13 @@ class bd {
         if (!fs.existsSync(path)) fs.mkdirSync(path, { recursive: true });
     }
 
-    getCachedCandles(fileName) {
-        const pathToFile = path.resolve(__dirname, `${this.PATHS.CANDLES}/${fileName}.json`);
-
-        if (!fs.existsSync(pathToFile)) return undefined;
-
-        return JSON.parse(fs.readFileSync(pathToFile, 'utf8'));
-    }
-
     /**
      * Сохраняет в базу значение data
      * @param data
      * @param {string} dir
      * @param {string} fileName
      */
-    save(data, dir = '', fileName) {
+    save(data, dir, fileName) {
         const finalPath = path.resolve(__dirname, `${dir}/`, `${fileName}.json`);
 
         this.ensureDir(finalPath.slice(0, finalPath.lastIndexOf('/')));
@@ -52,14 +44,14 @@ class bd {
      * Достает из базы данные по пути
      * @param {string} dir
      * @param {string} fileName
-     * @return any
+     * @return {Object | undefined}
      */
     get(dir, fileName) {
         const finalPath = path.resolve(__dirname, `${dir}/`, `${fileName}.json`);
 
         if (!fs.existsSync(finalPath)) {
             console.log(finalPath, 'does not exist yet');
-            return undefined;
+            return;
         }
 
         return JSON.parse(fs.readFileSync(finalPath, 'utf8'));
