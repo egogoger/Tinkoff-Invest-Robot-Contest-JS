@@ -47,10 +47,6 @@ class bd {
         });
     }
 
-    getFileNameForCachedCandles({ figi, ticker, from, to, candleInterval }) {
-        return `${figi}__${ticker}__${from}__${to}__${candleInterval}`;
-    }
-
     getCachedCandles(fileName) {
         const pathToFile = path.resolve(__dirname, `${fileName}.json`);
 

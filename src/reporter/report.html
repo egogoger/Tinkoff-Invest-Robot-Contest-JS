@@ -1,0 +1,4447 @@
+<!DOCTYPE html><html><head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Отчёты</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script type="text/javascript" src="https://unpkg.com/lightweight-charts@3.4.0/dist/lightweight-charts.standalone.production.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      background-color: azure;
+
+      font-family: 'Helvetica', 'Arial', sans-serif
+    }
+
+    .Container {
+      width: 900px;
+      margin: 12px 0;
+      background-color: white;
+      box-shadow: rgba(100, 100, 111, 0.2) 0 7px 29px 0;
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    h2 {
+      padding: 0 12px;
+      margin-bottom: 0;
+      border-bottom: 2px solid #2d2d2d;
+    }
+
+    h2 + * {
+      padding: 0 12px;
+    }
+
+    .CandlesChart #candles {
+      width: calc(100% - 24px);
+      height: 600px;
+    }
+
+    #equity-curve {
+      width: calc(100% - 24px);
+      height: 300px
+    }
+  </style>
+  <style>
+    .table-fill {
+      background: white;
+      border-collapse: collapse;
+      margin: auto;
+      width: 100%;
+    }
+
+    th {
+      color: #D5DDE5;
+      background: #1b1e24;
+      border-bottom:4px solid #9ea7af;
+      border-right: 1px solid #343a45;
+      font-size: 23px;
+      font-weight: 100;
+      padding:24px;
+      vertical-align:middle;
+    }
+
+    th:first-child {
+      border-top-left-radius:3px;
+    }
+
+    th:last-child {
+      border-top-right-radius:3px;
+      border-right:none;
+    }
+
+    tr {
+      border-top: 1px solid #C1C3D1;
+      border-bottom: 1px solid #C1C3D1;
+      color:black;
+      font-size:16px;
+      font-weight:normal;
+    }
+
+    tr:first-child {
+      border-top:none;
+    }
+
+    tr:last-child {
+      border-bottom:none;
+    }
+
+    tr:nth-child(odd) td {
+      background:#EBEBEB;
+    }
+
+    tr:last-child td:first-child {
+      border-bottom-left-radius:3px;
+    }
+
+    tr:last-child td:last-child {
+      border-bottom-right-radius:3px;
+    }
+
+    td {
+      background:#FFFFFF;
+      padding:20px;
+      text-align:left;
+      vertical-align:middle;
+      font-weight:300;
+      font-size:18px;
+      text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.1);
+      border-right: 1px solid #C1C3D1;
+    }
+
+    td:last-child {
+      border-right: 0;
+    }
+  </style>
+</head>
+<body>
+<div class="Container">
+  <div class="CandlesChart">
+    <h2>Котировка</h2>
+    <div id="candles"></div>
+  </div>
+  <div>
+    <h2>Кривая капитала</h2>
+    <div id="equity-curve"></div>
+  </div>
+  <div>
+    <h2>Характеристики стратегии</h2>
+    <table id="stats-table" class="table-fill">
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script type="text/javascript">
+const padTo2Digits = num => num.toString().padStart(2, '0');
+const timeFormatter = millis => {
+    const date = new Date(millis);
+
+    return [
+        padTo2Digits(date.getDate()),
+        padTo2Digits(date.getMonth() + 1),
+        date.getFullYear().toString().slice(2),
+    ].join('.');
+};
+const candles = [
+    {
+        "open": 0.01811,
+        "high": 0.02177,
+        "low": 0.015995,
+        "close": 0.0197,
+        "volume": 6536115,
+        "time": "2022-03-24T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0197,
+        "high": 0.0204,
+        "low": 0.01967,
+        "close": 0.01971,
+        "volume": 3706006,
+        "time": "2022-03-24T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019715,
+        "high": 0.01973,
+        "low": 0.01905,
+        "close": 0.0192,
+        "volume": 1674243,
+        "time": "2022-03-24T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0192,
+        "high": 0.0192,
+        "low": 0.018975,
+        "close": 0.019,
+        "volume": 935283,
+        "time": "2022-03-24T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019685,
+        "high": 0.019805,
+        "low": 0.0171,
+        "close": 0.01747,
+        "volume": 3490701,
+        "time": "2022-03-25T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01747,
+        "high": 0.0179,
+        "low": 0.017335,
+        "close": 0.0176,
+        "volume": 1884394,
+        "time": "2022-03-25T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0176,
+        "high": 0.017665,
+        "low": 0.01745,
+        "close": 0.0175,
+        "volume": 969902,
+        "time": "2022-03-25T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0175,
+        "high": 0.01755,
+        "low": 0.01745,
+        "close": 0.0175,
+        "volume": 767244,
+        "time": "2022-03-25T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01755,
+        "high": 0.017695,
+        "low": 0.0165,
+        "close": 0.016895,
+        "volume": 2254568,
+        "time": "2022-03-28T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.016895,
+        "high": 0.01704,
+        "low": 0.0168,
+        "close": 0.01702,
+        "volume": 661069,
+        "time": "2022-03-28T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01702,
+        "high": 0.017035,
+        "low": 0.01692,
+        "close": 0.016955,
+        "volume": 441508,
+        "time": "2022-03-28T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01696,
+        "high": 0.016975,
+        "low": 0.01683,
+        "close": 0.01685,
+        "volume": 427840,
+        "time": "2022-03-28T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01687,
+        "high": 0.017945,
+        "low": 0.01685,
+        "close": 0.017575,
+        "volume": 1693197,
+        "time": "2022-03-29T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.017575,
+        "high": 0.017875,
+        "low": 0.01735,
+        "close": 0.017755,
+        "volume": 1203993,
+        "time": "2022-03-29T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.017755,
+        "high": 0.017765,
+        "low": 0.01622,
+        "close": 0.016335,
+        "volume": 1758026,
+        "time": "2022-03-29T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.016335,
+        "high": 0.01671,
+        "low": 0.0163,
+        "close": 0.0165,
+        "volume": 1223823,
+        "time": "2022-03-29T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0175,
+        "high": 0.017545,
+        "low": 0.01702,
+        "close": 0.01714,
+        "volume": 1909611,
+        "time": "2022-03-30T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01715,
+        "high": 0.017195,
+        "low": 0.016945,
+        "close": 0.01704,
+        "volume": 738283,
+        "time": "2022-03-30T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.017045,
+        "high": 0.01719,
+        "low": 0.01701,
+        "close": 0.017155,
+        "volume": 650043,
+        "time": "2022-03-30T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.017155,
+        "high": 0.0172,
+        "low": 0.017125,
+        "close": 0.017155,
+        "volume": 747207,
+        "time": "2022-03-30T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.017355,
+        "high": 0.018775,
+        "low": 0.017355,
+        "close": 0.018505,
+        "volume": 4504442,
+        "time": "2022-03-31T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018495,
+        "high": 0.01865,
+        "low": 0.018005,
+        "close": 0.01825,
+        "volume": 1666180,
+        "time": "2022-03-31T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01825,
+        "high": 0.018955,
+        "low": 0.01824,
+        "close": 0.01864,
+        "volume": 2425301,
+        "time": "2022-03-31T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018655,
+        "high": 0.0195,
+        "low": 0.01852,
+        "close": 0.019475,
+        "volume": 2127204,
+        "time": "2022-03-31T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01949,
+        "high": 0.01992,
+        "low": 0.019115,
+        "close": 0.019645,
+        "volume": 3012856,
+        "time": "2022-03-31T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01966,
+        "high": 0.01969,
+        "low": 0.019,
+        "close": 0.019345,
+        "volume": 1416385,
+        "time": "2022-03-31T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01939,
+        "high": 0.01977,
+        "low": 0.01903,
+        "close": 0.019645,
+        "volume": 1115171,
+        "time": "2022-03-31T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019645,
+        "high": 0.019675,
+        "low": 0.01922,
+        "close": 0.01959,
+        "volume": 970703,
+        "time": "2022-03-31T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01959,
+        "high": 0.0198,
+        "low": 0.019555,
+        "close": 0.0198,
+        "volume": 1070155,
+        "time": "2022-03-31T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0205,
+        "high": 0.0215,
+        "low": 0.019895,
+        "close": 0.021345,
+        "volume": 5971290,
+        "time": "2022-04-01T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02135,
+        "high": 0.0216,
+        "low": 0.02041,
+        "close": 0.020735,
+        "volume": 2556111,
+        "time": "2022-04-01T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02075,
+        "high": 0.021235,
+        "low": 0.020685,
+        "close": 0.021005,
+        "volume": 1203353,
+        "time": "2022-04-01T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.021005,
+        "high": 0.02125,
+        "low": 0.0208,
+        "close": 0.021135,
+        "volume": 992781,
+        "time": "2022-04-01T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.021135,
+        "high": 0.02139,
+        "low": 0.02108,
+        "close": 0.02131,
+        "volume": 785108,
+        "time": "2022-04-01T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02131,
+        "high": 0.02147,
+        "low": 0.0209,
+        "close": 0.021345,
+        "volume": 1147179,
+        "time": "2022-04-01T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.021345,
+        "high": 0.022885,
+        "low": 0.02133,
+        "close": 0.02288,
+        "volume": 3716548,
+        "time": "2022-04-01T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.022875,
+        "high": 0.023845,
+        "low": 0.022505,
+        "close": 0.0227,
+        "volume": 5550528,
+        "time": "2022-04-01T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02269,
+        "high": 0.0229,
+        "low": 0.022135,
+        "close": 0.0225,
+        "volume": 2260243,
+        "time": "2022-04-01T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02302,
+        "high": 0.02475,
+        "low": 0.0225,
+        "close": 0.02338,
+        "volume": 10035535,
+        "time": "2022-04-04T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.023385,
+        "high": 0.023995,
+        "low": 0.023,
+        "close": 0.023705,
+        "volume": 2959263,
+        "time": "2022-04-04T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0237,
+        "high": 0.024215,
+        "low": 0.0236,
+        "close": 0.024175,
+        "volume": 2667127,
+        "time": "2022-04-04T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.024175,
+        "high": 0.02458,
+        "low": 0.023905,
+        "close": 0.02417,
+        "volume": 3963830,
+        "time": "2022-04-04T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.024165,
+        "high": 0.02448,
+        "low": 0.02399,
+        "close": 0.024295,
+        "volume": 1752696,
+        "time": "2022-04-04T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0243,
+        "high": 0.024655,
+        "low": 0.0241,
+        "close": 0.024625,
+        "volume": 1346584,
+        "time": "2022-04-04T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02462,
+        "high": 0.02475,
+        "low": 0.0243,
+        "close": 0.02449,
+        "volume": 2260304,
+        "time": "2022-04-04T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02449,
+        "high": 0.02489,
+        "low": 0.02448,
+        "close": 0.02483,
+        "volume": 2664174,
+        "time": "2022-04-04T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02483,
+        "high": 0.02515,
+        "low": 0.024755,
+        "close": 0.0251,
+        "volume": 2208971,
+        "time": "2022-04-04T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02581,
+        "high": 0.02636,
+        "low": 0.02406,
+        "close": 0.02421,
+        "volume": 9066647,
+        "time": "2022-04-05T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02415,
+        "high": 0.025095,
+        "low": 0.023315,
+        "close": 0.024415,
+        "volume": 5678841,
+        "time": "2022-04-05T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.024415,
+        "high": 0.02468,
+        "low": 0.0234,
+        "close": 0.023795,
+        "volume": 4020044,
+        "time": "2022-04-05T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.023795,
+        "high": 0.024095,
+        "low": 0.022265,
+        "close": 0.022355,
+        "volume": 3731516,
+        "time": "2022-04-05T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02237,
+        "high": 0.02367,
+        "low": 0.0218,
+        "close": 0.023395,
+        "volume": 5015785,
+        "time": "2022-04-05T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.023395,
+        "high": 0.0247,
+        "low": 0.0233,
+        "close": 0.02385,
+        "volume": 4254508,
+        "time": "2022-04-05T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02385,
+        "high": 0.024135,
+        "low": 0.0232,
+        "close": 0.0234,
+        "volume": 1969806,
+        "time": "2022-04-05T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.023475,
+        "high": 0.02364,
+        "low": 0.02284,
+        "close": 0.02303,
+        "volume": 1433585,
+        "time": "2022-04-05T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02304,
+        "high": 0.02341,
+        "low": 0.023,
+        "close": 0.02308,
+        "volume": 820987,
+        "time": "2022-04-05T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02209,
+        "high": 0.0227,
+        "low": 0.02122,
+        "close": 0.022345,
+        "volume": 5464724,
+        "time": "2022-04-06T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.022365,
+        "high": 0.02259,
+        "low": 0.022035,
+        "close": 0.022575,
+        "volume": 1132447,
+        "time": "2022-04-06T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.022575,
+        "high": 0.0235,
+        "low": 0.022445,
+        "close": 0.023365,
+        "volume": 2235840,
+        "time": "2022-04-06T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02337,
+        "high": 0.0235,
+        "low": 0.0227,
+        "close": 0.022825,
+        "volume": 1798713,
+        "time": "2022-04-06T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02281,
+        "high": 0.023,
+        "low": 0.02235,
+        "close": 0.02267,
+        "volume": 1140951,
+        "time": "2022-04-06T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02267,
+        "high": 0.02278,
+        "low": 0.022525,
+        "close": 0.022625,
+        "volume": 510346,
+        "time": "2022-04-06T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02265,
+        "high": 0.02278,
+        "low": 0.022525,
+        "close": 0.02255,
+        "volume": 505532,
+        "time": "2022-04-06T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02255,
+        "high": 0.0226,
+        "low": 0.02202,
+        "close": 0.02207,
+        "volume": 1183661,
+        "time": "2022-04-06T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.022065,
+        "high": 0.02225,
+        "low": 0.02185,
+        "close": 0.02195,
+        "volume": 852910,
+        "time": "2022-04-06T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.021995,
+        "high": 0.023115,
+        "low": 0.021995,
+        "close": 0.02269,
+        "volume": 3223019,
+        "time": "2022-04-07T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02269,
+        "high": 0.0229,
+        "low": 0.022475,
+        "close": 0.02285,
+        "volume": 822360,
+        "time": "2022-04-07T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02285,
+        "high": 0.023075,
+        "low": 0.02262,
+        "close": 0.02272,
+        "volume": 1353032,
+        "time": "2022-04-07T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02274,
+        "high": 0.022805,
+        "low": 0.02262,
+        "close": 0.02272,
+        "volume": 385229,
+        "time": "2022-04-07T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.022725,
+        "high": 0.022895,
+        "low": 0.022705,
+        "close": 0.022715,
+        "volume": 454825,
+        "time": "2022-04-07T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.022725,
+        "high": 0.022795,
+        "low": 0.02252,
+        "close": 0.0226,
+        "volume": 370716,
+        "time": "2022-04-07T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.022615,
+        "high": 0.022675,
+        "low": 0.022385,
+        "close": 0.02254,
+        "volume": 695398,
+        "time": "2022-04-07T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02254,
+        "high": 0.02261,
+        "low": 0.02247,
+        "close": 0.02253,
+        "volume": 248827,
+        "time": "2022-04-07T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.022515,
+        "high": 0.022845,
+        "low": 0.02239,
+        "close": 0.02281,
+        "volume": 524212,
+        "time": "2022-04-07T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02306,
+        "high": 0.02328,
+        "low": 0.022275,
+        "close": 0.0226,
+        "volume": 1977488,
+        "time": "2022-04-08T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02258,
+        "high": 0.0227,
+        "low": 0.022405,
+        "close": 0.022425,
+        "volume": 442921,
+        "time": "2022-04-08T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02242,
+        "high": 0.022655,
+        "low": 0.022415,
+        "close": 0.02257,
+        "volume": 369631,
+        "time": "2022-04-08T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02257,
+        "high": 0.0226,
+        "low": 0.02247,
+        "close": 0.022505,
+        "volume": 194495,
+        "time": "2022-04-08T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.022505,
+        "high": 0.022505,
+        "low": 0.02215,
+        "close": 0.02228,
+        "volume": 629561,
+        "time": "2022-04-08T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02227,
+        "high": 0.022415,
+        "low": 0.022005,
+        "close": 0.022165,
+        "volume": 807148,
+        "time": "2022-04-08T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.022165,
+        "high": 0.022355,
+        "low": 0.022115,
+        "close": 0.02229,
+        "volume": 366387,
+        "time": "2022-04-08T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02229,
+        "high": 0.022305,
+        "low": 0.02218,
+        "close": 0.022235,
+        "volume": 238765,
+        "time": "2022-04-08T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02225,
+        "high": 0.02248,
+        "low": 0.022235,
+        "close": 0.02236,
+        "volume": 484696,
+        "time": "2022-04-08T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02207,
+        "high": 0.02263,
+        "low": 0.0214,
+        "close": 0.022485,
+        "volume": 2191903,
+        "time": "2022-04-11T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.022485,
+        "high": 0.022485,
+        "low": 0.022125,
+        "close": 0.02218,
+        "volume": 519642,
+        "time": "2022-04-11T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02218,
+        "high": 0.022255,
+        "low": 0.02197,
+        "close": 0.02205,
+        "volume": 541214,
+        "time": "2022-04-11T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02205,
+        "high": 0.0222,
+        "low": 0.022,
+        "close": 0.022105,
+        "volume": 312464,
+        "time": "2022-04-11T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.022105,
+        "high": 0.02211,
+        "low": 0.02185,
+        "close": 0.021925,
+        "volume": 315914,
+        "time": "2022-04-11T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02194,
+        "high": 0.022075,
+        "low": 0.02191,
+        "close": 0.02195,
+        "volume": 237650,
+        "time": "2022-04-11T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.021955,
+        "high": 0.021965,
+        "low": 0.021555,
+        "close": 0.021725,
+        "volume": 751145,
+        "time": "2022-04-11T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02175,
+        "high": 0.021945,
+        "low": 0.02158,
+        "close": 0.02174,
+        "volume": 439661,
+        "time": "2022-04-11T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.021725,
+        "high": 0.021745,
+        "low": 0.0215,
+        "close": 0.0215,
+        "volume": 557366,
+        "time": "2022-04-11T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.021695,
+        "high": 0.021695,
+        "low": 0.020315,
+        "close": 0.020455,
+        "volume": 2601576,
+        "time": "2022-04-12T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02045,
+        "high": 0.020855,
+        "low": 0.02015,
+        "close": 0.02069,
+        "volume": 1776691,
+        "time": "2022-04-12T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0207,
+        "high": 0.02116,
+        "low": 0.020605,
+        "close": 0.02062,
+        "volume": 653479,
+        "time": "2022-04-12T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02062,
+        "high": 0.020775,
+        "low": 0.020535,
+        "close": 0.020695,
+        "volume": 243449,
+        "time": "2022-04-12T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.020695,
+        "high": 0.02085,
+        "low": 0.02064,
+        "close": 0.0208,
+        "volume": 224865,
+        "time": "2022-04-12T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.020785,
+        "high": 0.0211,
+        "low": 0.020765,
+        "close": 0.02106,
+        "volume": 377898,
+        "time": "2022-04-12T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02106,
+        "high": 0.021215,
+        "low": 0.020765,
+        "close": 0.02108,
+        "volume": 593891,
+        "time": "2022-04-12T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.021085,
+        "high": 0.02125,
+        "low": 0.020925,
+        "close": 0.02111,
+        "volume": 477611,
+        "time": "2022-04-12T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02111,
+        "high": 0.02117,
+        "low": 0.021015,
+        "close": 0.02111,
+        "volume": 301682,
+        "time": "2022-04-12T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02143,
+        "high": 0.021615,
+        "low": 0.021115,
+        "close": 0.021265,
+        "volume": 1417658,
+        "time": "2022-04-13T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02128,
+        "high": 0.02134,
+        "low": 0.021055,
+        "close": 0.02113,
+        "volume": 409996,
+        "time": "2022-04-13T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.021135,
+        "high": 0.02117,
+        "low": 0.02093,
+        "close": 0.020975,
+        "volume": 510603,
+        "time": "2022-04-13T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.020965,
+        "high": 0.021115,
+        "low": 0.02083,
+        "close": 0.020975,
+        "volume": 393502,
+        "time": "2022-04-13T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02097,
+        "high": 0.02108,
+        "low": 0.020935,
+        "close": 0.021045,
+        "volume": 226044,
+        "time": "2022-04-13T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.021045,
+        "high": 0.02111,
+        "low": 0.02085,
+        "close": 0.02102,
+        "volume": 183405,
+        "time": "2022-04-13T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02102,
+        "high": 0.02103,
+        "low": 0.020865,
+        "close": 0.02103,
+        "volume": 139168,
+        "time": "2022-04-13T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.021025,
+        "high": 0.021085,
+        "low": 0.020975,
+        "close": 0.021085,
+        "volume": 183325,
+        "time": "2022-04-13T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02108,
+        "high": 0.02119,
+        "low": 0.02105,
+        "close": 0.021135,
+        "volume": 209424,
+        "time": "2022-04-13T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.021225,
+        "high": 0.0213,
+        "low": 0.0207,
+        "close": 0.020765,
+        "volume": 875006,
+        "time": "2022-04-14T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.020765,
+        "high": 0.020895,
+        "low": 0.02065,
+        "close": 0.02072,
+        "volume": 344259,
+        "time": "2022-04-14T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.020715,
+        "high": 0.02081,
+        "low": 0.02066,
+        "close": 0.020765,
+        "volume": 184616,
+        "time": "2022-04-14T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.020765,
+        "high": 0.020785,
+        "low": 0.02061,
+        "close": 0.02065,
+        "volume": 212477,
+        "time": "2022-04-14T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02065,
+        "high": 0.02068,
+        "low": 0.02045,
+        "close": 0.020575,
+        "volume": 462436,
+        "time": "2022-04-14T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02056,
+        "high": 0.02067,
+        "low": 0.020125,
+        "close": 0.02031,
+        "volume": 660723,
+        "time": "2022-04-14T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02031,
+        "high": 0.02032,
+        "low": 0.01992,
+        "close": 0.02016,
+        "volume": 862179,
+        "time": "2022-04-14T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02016,
+        "high": 0.020245,
+        "low": 0.02001,
+        "close": 0.02013,
+        "volume": 431073,
+        "time": "2022-04-14T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.020165,
+        "high": 0.0202,
+        "low": 0.019905,
+        "close": 0.019935,
+        "volume": 367786,
+        "time": "2022-04-14T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01991,
+        "high": 0.019995,
+        "low": 0.019105,
+        "close": 0.019845,
+        "volume": 2189292,
+        "time": "2022-04-15T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019835,
+        "high": 0.02062,
+        "low": 0.019825,
+        "close": 0.020185,
+        "volume": 1637642,
+        "time": "2022-04-15T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.020185,
+        "high": 0.020235,
+        "low": 0.02,
+        "close": 0.02,
+        "volume": 591836,
+        "time": "2022-04-15T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02,
+        "high": 0.02008,
+        "low": 0.019785,
+        "close": 0.020025,
+        "volume": 434025,
+        "time": "2022-04-15T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02002,
+        "high": 0.020175,
+        "low": 0.01988,
+        "close": 0.02017,
+        "volume": 313137,
+        "time": "2022-04-15T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02017,
+        "high": 0.02018,
+        "low": 0.01992,
+        "close": 0.02006,
+        "volume": 234463,
+        "time": "2022-04-15T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02005,
+        "high": 0.020095,
+        "low": 0.01976,
+        "close": 0.01989,
+        "volume": 262944,
+        "time": "2022-04-15T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019895,
+        "high": 0.020225,
+        "low": 0.01977,
+        "close": 0.02015,
+        "volume": 384085,
+        "time": "2022-04-15T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02015,
+        "high": 0.02028,
+        "low": 0.020005,
+        "close": 0.020125,
+        "volume": 272410,
+        "time": "2022-04-15T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.020275,
+        "high": 0.0205,
+        "low": 0.01954,
+        "close": 0.01982,
+        "volume": 1510165,
+        "time": "2022-04-18T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01983,
+        "high": 0.01997,
+        "low": 0.01963,
+        "close": 0.01968,
+        "volume": 391193,
+        "time": "2022-04-18T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019695,
+        "high": 0.01971,
+        "low": 0.01945,
+        "close": 0.01958,
+        "volume": 519012,
+        "time": "2022-04-18T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019575,
+        "high": 0.019655,
+        "low": 0.01945,
+        "close": 0.01953,
+        "volume": 295649,
+        "time": "2022-04-18T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019505,
+        "high": 0.01961,
+        "low": 0.0193,
+        "close": 0.019375,
+        "volume": 421658,
+        "time": "2022-04-18T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01936,
+        "high": 0.019485,
+        "low": 0.019255,
+        "close": 0.01942,
+        "volume": 314054,
+        "time": "2022-04-18T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01942,
+        "high": 0.019605,
+        "low": 0.019335,
+        "close": 0.019455,
+        "volume": 173859,
+        "time": "2022-04-18T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01947,
+        "high": 0.019485,
+        "low": 0.019105,
+        "close": 0.01934,
+        "volume": 349558,
+        "time": "2022-04-18T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01934,
+        "high": 0.01934,
+        "low": 0.01902,
+        "close": 0.019025,
+        "volume": 357983,
+        "time": "2022-04-18T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019,
+        "high": 0.019,
+        "low": 0.01842,
+        "close": 0.01864,
+        "volume": 1662968,
+        "time": "2022-04-19T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01869,
+        "high": 0.01887,
+        "low": 0.0185,
+        "close": 0.01854,
+        "volume": 493369,
+        "time": "2022-04-19T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01854,
+        "high": 0.01856,
+        "low": 0.018225,
+        "close": 0.01844,
+        "volume": 567648,
+        "time": "2022-04-19T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01846,
+        "high": 0.018475,
+        "low": 0.01806,
+        "close": 0.01811,
+        "volume": 534105,
+        "time": "2022-04-19T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01812,
+        "high": 0.01817,
+        "low": 0.01787,
+        "close": 0.01787,
+        "volume": 931667,
+        "time": "2022-04-19T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.017865,
+        "high": 0.01835,
+        "low": 0.01786,
+        "close": 0.01825,
+        "volume": 774741,
+        "time": "2022-04-19T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018245,
+        "high": 0.01863,
+        "low": 0.01824,
+        "close": 0.018415,
+        "volume": 642252,
+        "time": "2022-04-19T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01843,
+        "high": 0.01873,
+        "low": 0.018335,
+        "close": 0.018595,
+        "volume": 378708,
+        "time": "2022-04-19T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018595,
+        "high": 0.01872,
+        "low": 0.01856,
+        "close": 0.018695,
+        "volume": 331494,
+        "time": "2022-04-19T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018805,
+        "high": 0.01884,
+        "low": 0.018225,
+        "close": 0.018605,
+        "volume": 787501,
+        "time": "2022-04-20T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018585,
+        "high": 0.019225,
+        "low": 0.01842,
+        "close": 0.019045,
+        "volume": 1000078,
+        "time": "2022-04-20T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01904,
+        "high": 0.01928,
+        "low": 0.01882,
+        "close": 0.019165,
+        "volume": 1276272,
+        "time": "2022-04-20T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019165,
+        "high": 0.019225,
+        "low": 0.01896,
+        "close": 0.019225,
+        "volume": 521773,
+        "time": "2022-04-20T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01923,
+        "high": 0.019355,
+        "low": 0.019095,
+        "close": 0.01917,
+        "volume": 688168,
+        "time": "2022-04-20T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01917,
+        "high": 0.0192,
+        "low": 0.019035,
+        "close": 0.01914,
+        "volume": 325495,
+        "time": "2022-04-20T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01914,
+        "high": 0.01919,
+        "low": 0.018815,
+        "close": 0.018855,
+        "volume": 545694,
+        "time": "2022-04-20T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018875,
+        "high": 0.018975,
+        "low": 0.018655,
+        "close": 0.018835,
+        "volume": 440265,
+        "time": "2022-04-20T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01883,
+        "high": 0.019295,
+        "low": 0.018655,
+        "close": 0.019295,
+        "volume": 427964,
+        "time": "2022-04-20T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01921,
+        "high": 0.01928,
+        "low": 0.01879,
+        "close": 0.01899,
+        "volume": 896098,
+        "time": "2022-04-21T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019,
+        "high": 0.019175,
+        "low": 0.01887,
+        "close": 0.019085,
+        "volume": 373785,
+        "time": "2022-04-21T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019095,
+        "high": 0.019195,
+        "low": 0.01903,
+        "close": 0.019105,
+        "volume": 336755,
+        "time": "2022-04-21T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01913,
+        "high": 0.01917,
+        "low": 0.01903,
+        "close": 0.019135,
+        "volume": 131205,
+        "time": "2022-04-21T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019125,
+        "high": 0.019145,
+        "low": 0.019015,
+        "close": 0.019085,
+        "volume": 169661,
+        "time": "2022-04-21T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019085,
+        "high": 0.01917,
+        "low": 0.018965,
+        "close": 0.01903,
+        "volume": 190678,
+        "time": "2022-04-21T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01904,
+        "high": 0.019045,
+        "low": 0.01888,
+        "close": 0.0189,
+        "volume": 218384,
+        "time": "2022-04-21T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01891,
+        "high": 0.01893,
+        "low": 0.01875,
+        "close": 0.01885,
+        "volume": 286061,
+        "time": "2022-04-21T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01885,
+        "high": 0.01898,
+        "low": 0.018715,
+        "close": 0.01898,
+        "volume": 336578,
+        "time": "2022-04-21T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01886,
+        "high": 0.0196,
+        "low": 0.01868,
+        "close": 0.01936,
+        "volume": 1258981,
+        "time": "2022-04-22T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01938,
+        "high": 0.01939,
+        "low": 0.019005,
+        "close": 0.0191,
+        "volume": 415791,
+        "time": "2022-04-22T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019095,
+        "high": 0.01922,
+        "low": 0.018785,
+        "close": 0.018875,
+        "volume": 443146,
+        "time": "2022-04-22T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018875,
+        "high": 0.01897,
+        "low": 0.01868,
+        "close": 0.018935,
+        "volume": 273336,
+        "time": "2022-04-22T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018935,
+        "high": 0.01905,
+        "low": 0.018785,
+        "close": 0.01884,
+        "volume": 229443,
+        "time": "2022-04-22T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018835,
+        "high": 0.01886,
+        "low": 0.01875,
+        "close": 0.018825,
+        "volume": 107538,
+        "time": "2022-04-22T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018825,
+        "high": 0.018925,
+        "low": 0.01877,
+        "close": 0.0189,
+        "volume": 130791,
+        "time": "2022-04-22T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01891,
+        "high": 0.018915,
+        "low": 0.0187,
+        "close": 0.01884,
+        "volume": 137467,
+        "time": "2022-04-22T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01884,
+        "high": 0.01891,
+        "low": 0.0188,
+        "close": 0.01881,
+        "volume": 197170,
+        "time": "2022-04-22T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018665,
+        "high": 0.0187,
+        "low": 0.018105,
+        "close": 0.018335,
+        "volume": 1059992,
+        "time": "2022-04-25T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01834,
+        "high": 0.018425,
+        "low": 0.01805,
+        "close": 0.01808,
+        "volume": 319844,
+        "time": "2022-04-25T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01808,
+        "high": 0.0184,
+        "low": 0.01805,
+        "close": 0.01835,
+        "volume": 355106,
+        "time": "2022-04-25T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01835,
+        "high": 0.01835,
+        "low": 0.01811,
+        "close": 0.018195,
+        "volume": 313299,
+        "time": "2022-04-25T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018185,
+        "high": 0.018255,
+        "low": 0.0181,
+        "close": 0.01821,
+        "volume": 163338,
+        "time": "2022-04-25T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01821,
+        "high": 0.01825,
+        "low": 0.0181,
+        "close": 0.018215,
+        "volume": 255937,
+        "time": "2022-04-25T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01821,
+        "high": 0.01825,
+        "low": 0.018125,
+        "close": 0.01824,
+        "volume": 143752,
+        "time": "2022-04-25T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018245,
+        "high": 0.018305,
+        "low": 0.01816,
+        "close": 0.018195,
+        "volume": 139345,
+        "time": "2022-04-25T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018195,
+        "high": 0.018235,
+        "low": 0.01803,
+        "close": 0.018155,
+        "volume": 319250,
+        "time": "2022-04-25T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01825,
+        "high": 0.018555,
+        "low": 0.01812,
+        "close": 0.0185,
+        "volume": 1063671,
+        "time": "2022-04-26T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0185,
+        "high": 0.018735,
+        "low": 0.01843,
+        "close": 0.01852,
+        "volume": 673317,
+        "time": "2022-04-26T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01852,
+        "high": 0.018755,
+        "low": 0.018485,
+        "close": 0.018715,
+        "volume": 387865,
+        "time": "2022-04-26T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01872,
+        "high": 0.0189,
+        "low": 0.01865,
+        "close": 0.018825,
+        "volume": 325909,
+        "time": "2022-04-26T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018825,
+        "high": 0.01903,
+        "low": 0.0188,
+        "close": 0.018855,
+        "volume": 514410,
+        "time": "2022-04-26T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01885,
+        "high": 0.019205,
+        "low": 0.01884,
+        "close": 0.019095,
+        "volume": 723971,
+        "time": "2022-04-26T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0191,
+        "high": 0.01919,
+        "low": 0.018955,
+        "close": 0.01914,
+        "volume": 531776,
+        "time": "2022-04-26T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01914,
+        "high": 0.019565,
+        "low": 0.01898,
+        "close": 0.019545,
+        "volume": 845248,
+        "time": "2022-04-26T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01954,
+        "high": 0.01956,
+        "low": 0.01901,
+        "close": 0.019125,
+        "volume": 836640,
+        "time": "2022-04-26T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019195,
+        "high": 0.01995,
+        "low": 0.0189,
+        "close": 0.01979,
+        "volume": 2512586,
+        "time": "2022-04-27T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01979,
+        "high": 0.019825,
+        "low": 0.019305,
+        "close": 0.019335,
+        "volume": 1036440,
+        "time": "2022-04-27T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01934,
+        "high": 0.019695,
+        "low": 0.019325,
+        "close": 0.01949,
+        "volume": 609007,
+        "time": "2022-04-27T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01948,
+        "high": 0.01972,
+        "low": 0.01947,
+        "close": 0.01972,
+        "volume": 356557,
+        "time": "2022-04-27T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01972,
+        "high": 0.01985,
+        "low": 0.019615,
+        "close": 0.01972,
+        "volume": 509970,
+        "time": "2022-04-27T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01972,
+        "high": 0.019915,
+        "low": 0.019685,
+        "close": 0.01991,
+        "volume": 595611,
+        "time": "2022-04-27T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01991,
+        "high": 0.0201,
+        "low": 0.019795,
+        "close": 0.01995,
+        "volume": 1086659,
+        "time": "2022-04-27T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01995,
+        "high": 0.019995,
+        "low": 0.01983,
+        "close": 0.01992,
+        "volume": 516178,
+        "time": "2022-04-27T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019915,
+        "high": 0.019995,
+        "low": 0.019895,
+        "close": 0.0199,
+        "volume": 556655,
+        "time": "2022-04-27T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0201,
+        "high": 0.020395,
+        "low": 0.019975,
+        "close": 0.02005,
+        "volume": 1929591,
+        "time": "2022-04-28T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02004,
+        "high": 0.020125,
+        "low": 0.01992,
+        "close": 0.02007,
+        "volume": 620335,
+        "time": "2022-04-28T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.02006,
+        "high": 0.02031,
+        "low": 0.02005,
+        "close": 0.02024,
+        "volume": 624311,
+        "time": "2022-04-28T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.020225,
+        "high": 0.0203,
+        "low": 0.019925,
+        "close": 0.01997,
+        "volume": 734902,
+        "time": "2022-04-28T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01997,
+        "high": 0.020095,
+        "low": 0.019455,
+        "close": 0.019645,
+        "volume": 1093590,
+        "time": "2022-04-28T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01964,
+        "high": 0.019645,
+        "low": 0.01924,
+        "close": 0.01932,
+        "volume": 863198,
+        "time": "2022-04-28T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0193,
+        "high": 0.01955,
+        "low": 0.01926,
+        "close": 0.01926,
+        "volume": 415872,
+        "time": "2022-04-28T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019285,
+        "high": 0.01937,
+        "low": 0.01906,
+        "close": 0.01913,
+        "volume": 510135,
+        "time": "2022-04-28T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01911,
+        "high": 0.01915,
+        "low": 0.01903,
+        "close": 0.019115,
+        "volume": 294971,
+        "time": "2022-04-28T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019495,
+        "high": 0.02039,
+        "low": 0.01928,
+        "close": 0.019425,
+        "volume": 2934393,
+        "time": "2022-04-29T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01944,
+        "high": 0.020285,
+        "low": 0.01943,
+        "close": 0.01994,
+        "volume": 1732736,
+        "time": "2022-04-29T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019905,
+        "high": 0.02015,
+        "low": 0.01974,
+        "close": 0.019955,
+        "volume": 962475,
+        "time": "2022-04-29T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019955,
+        "high": 0.02005,
+        "low": 0.019765,
+        "close": 0.019965,
+        "volume": 527836,
+        "time": "2022-04-29T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019975,
+        "high": 0.02005,
+        "low": 0.0198,
+        "close": 0.01992,
+        "volume": 405794,
+        "time": "2022-04-29T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01992,
+        "high": 0.02038,
+        "low": 0.01985,
+        "close": 0.020055,
+        "volume": 1113902,
+        "time": "2022-04-29T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.020055,
+        "high": 0.02021,
+        "low": 0.01965,
+        "close": 0.019935,
+        "volume": 1325717,
+        "time": "2022-04-29T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01992,
+        "high": 0.020125,
+        "low": 0.019845,
+        "close": 0.019975,
+        "volume": 568445,
+        "time": "2022-04-29T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019965,
+        "high": 0.02012,
+        "low": 0.0199,
+        "close": 0.020095,
+        "volume": 642543,
+        "time": "2022-04-29T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.020085,
+        "high": 0.020495,
+        "low": 0.019765,
+        "close": 0.019925,
+        "volume": 1849361,
+        "time": "2022-05-04T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019925,
+        "high": 0.019995,
+        "low": 0.01952,
+        "close": 0.01962,
+        "volume": 636871,
+        "time": "2022-05-04T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01961,
+        "high": 0.01982,
+        "low": 0.019555,
+        "close": 0.019785,
+        "volume": 371053,
+        "time": "2022-05-04T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01979,
+        "high": 0.01985,
+        "low": 0.01967,
+        "close": 0.019765,
+        "volume": 246649,
+        "time": "2022-05-04T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01978,
+        "high": 0.01978,
+        "low": 0.01962,
+        "close": 0.019735,
+        "volume": 201144,
+        "time": "2022-05-04T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01974,
+        "high": 0.019825,
+        "low": 0.01965,
+        "close": 0.019775,
+        "volume": 182442,
+        "time": "2022-05-04T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019765,
+        "high": 0.019775,
+        "low": 0.01955,
+        "close": 0.0196,
+        "volume": 335771,
+        "time": "2022-05-04T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0196,
+        "high": 0.01975,
+        "low": 0.01955,
+        "close": 0.019635,
+        "volume": 152839,
+        "time": "2022-05-04T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01965,
+        "high": 0.019745,
+        "low": 0.019565,
+        "close": 0.01959,
+        "volume": 177620,
+        "time": "2022-05-04T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01974,
+        "high": 0.019915,
+        "low": 0.01965,
+        "close": 0.019685,
+        "volume": 720818,
+        "time": "2022-05-05T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019685,
+        "high": 0.019795,
+        "low": 0.0196,
+        "close": 0.019665,
+        "volume": 279389,
+        "time": "2022-05-05T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01966,
+        "high": 0.019735,
+        "low": 0.0196,
+        "close": 0.0197,
+        "volume": 112195,
+        "time": "2022-05-05T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019695,
+        "high": 0.01986,
+        "low": 0.019635,
+        "close": 0.01976,
+        "volume": 250432,
+        "time": "2022-05-05T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01976,
+        "high": 0.01984,
+        "low": 0.019725,
+        "close": 0.019785,
+        "volume": 137722,
+        "time": "2022-05-05T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019785,
+        "high": 0.019805,
+        "low": 0.01975,
+        "close": 0.019785,
+        "volume": 115055,
+        "time": "2022-05-05T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01977,
+        "high": 0.019785,
+        "low": 0.01972,
+        "close": 0.019755,
+        "volume": 88276,
+        "time": "2022-05-05T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01975,
+        "high": 0.0198,
+        "low": 0.01968,
+        "close": 0.019735,
+        "volume": 118601,
+        "time": "2022-05-05T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019735,
+        "high": 0.019795,
+        "low": 0.019695,
+        "close": 0.019795,
+        "volume": 133751,
+        "time": "2022-05-05T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01975,
+        "high": 0.01975,
+        "low": 0.0193,
+        "close": 0.01945,
+        "volume": 579221,
+        "time": "2022-05-06T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019455,
+        "high": 0.01959,
+        "low": 0.01938,
+        "close": 0.019455,
+        "volume": 240851,
+        "time": "2022-05-06T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01945,
+        "high": 0.019515,
+        "low": 0.019325,
+        "close": 0.01939,
+        "volume": 163280,
+        "time": "2022-05-06T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01939,
+        "high": 0.01945,
+        "low": 0.019335,
+        "close": 0.01941,
+        "volume": 96308,
+        "time": "2022-05-06T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0194,
+        "high": 0.01948,
+        "low": 0.019245,
+        "close": 0.019365,
+        "volume": 271135,
+        "time": "2022-05-06T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01937,
+        "high": 0.01955,
+        "low": 0.01937,
+        "close": 0.01949,
+        "volume": 267028,
+        "time": "2022-05-06T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0195,
+        "high": 0.01952,
+        "low": 0.019365,
+        "close": 0.01942,
+        "volume": 156186,
+        "time": "2022-05-06T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01942,
+        "high": 0.01944,
+        "low": 0.019355,
+        "close": 0.01937,
+        "volume": 78680,
+        "time": "2022-05-06T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019385,
+        "high": 0.01948,
+        "low": 0.01932,
+        "close": 0.01948,
+        "volume": 293851,
+        "time": "2022-05-06T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01943,
+        "high": 0.01975,
+        "low": 0.019175,
+        "close": 0.0196,
+        "volume": 945049,
+        "time": "2022-05-11T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0196,
+        "high": 0.019685,
+        "low": 0.019425,
+        "close": 0.019505,
+        "volume": 301690,
+        "time": "2022-05-11T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019495,
+        "high": 0.01952,
+        "low": 0.0193,
+        "close": 0.019385,
+        "volume": 278599,
+        "time": "2022-05-11T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019385,
+        "high": 0.019425,
+        "low": 0.01935,
+        "close": 0.01938,
+        "volume": 84583,
+        "time": "2022-05-11T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01938,
+        "high": 0.01945,
+        "low": 0.01935,
+        "close": 0.01938,
+        "volume": 109633,
+        "time": "2022-05-11T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01938,
+        "high": 0.019395,
+        "low": 0.01925,
+        "close": 0.01927,
+        "volume": 172021,
+        "time": "2022-05-11T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01928,
+        "high": 0.01934,
+        "low": 0.01925,
+        "close": 0.019285,
+        "volume": 148796,
+        "time": "2022-05-11T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01929,
+        "high": 0.019385,
+        "low": 0.01925,
+        "close": 0.019345,
+        "volume": 145597,
+        "time": "2022-05-11T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019345,
+        "high": 0.019455,
+        "low": 0.019305,
+        "close": 0.019305,
+        "volume": 234030,
+        "time": "2022-05-11T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019305,
+        "high": 0.019375,
+        "low": 0.01907,
+        "close": 0.019145,
+        "volume": 461967,
+        "time": "2022-05-12T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019145,
+        "high": 0.01924,
+        "low": 0.018985,
+        "close": 0.01922,
+        "volume": 315623,
+        "time": "2022-05-12T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01921,
+        "high": 0.019235,
+        "low": 0.019075,
+        "close": 0.019095,
+        "volume": 108270,
+        "time": "2022-05-12T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01912,
+        "high": 0.01919,
+        "low": 0.019085,
+        "close": 0.01912,
+        "volume": 152304,
+        "time": "2022-05-12T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01912,
+        "high": 0.01914,
+        "low": 0.01904,
+        "close": 0.01905,
+        "volume": 98574,
+        "time": "2022-05-12T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01905,
+        "high": 0.01908,
+        "low": 0.01888,
+        "close": 0.018905,
+        "volume": 261643,
+        "time": "2022-05-12T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018905,
+        "high": 0.01891,
+        "low": 0.018505,
+        "close": 0.01859,
+        "volume": 750410,
+        "time": "2022-05-12T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018585,
+        "high": 0.01871,
+        "low": 0.018345,
+        "close": 0.018705,
+        "volume": 369992,
+        "time": "2022-05-12T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0187,
+        "high": 0.018745,
+        "low": 0.018555,
+        "close": 0.018555,
+        "volume": 157951,
+        "time": "2022-05-12T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018825,
+        "high": 0.018845,
+        "low": 0.01846,
+        "close": 0.01856,
+        "volume": 450232,
+        "time": "2022-05-13T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01858,
+        "high": 0.01866,
+        "low": 0.018515,
+        "close": 0.018615,
+        "volume": 121810,
+        "time": "2022-05-13T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01862,
+        "high": 0.018835,
+        "low": 0.01855,
+        "close": 0.01875,
+        "volume": 207941,
+        "time": "2022-05-13T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018755,
+        "high": 0.018765,
+        "low": 0.018675,
+        "close": 0.018705,
+        "volume": 138576,
+        "time": "2022-05-13T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018705,
+        "high": 0.01875,
+        "low": 0.018655,
+        "close": 0.01872,
+        "volume": 61658,
+        "time": "2022-05-13T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01871,
+        "high": 0.01872,
+        "low": 0.01865,
+        "close": 0.01869,
+        "volume": 62451,
+        "time": "2022-05-13T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0187,
+        "high": 0.01872,
+        "low": 0.01866,
+        "close": 0.018685,
+        "volume": 51051,
+        "time": "2022-05-13T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01868,
+        "high": 0.018895,
+        "low": 0.01868,
+        "close": 0.018825,
+        "volume": 242982,
+        "time": "2022-05-13T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018825,
+        "high": 0.01884,
+        "low": 0.01865,
+        "close": 0.01865,
+        "volume": 177514,
+        "time": "2022-05-13T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018825,
+        "high": 0.018945,
+        "low": 0.01865,
+        "close": 0.018915,
+        "volume": 555113,
+        "time": "2022-05-16T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018915,
+        "high": 0.019045,
+        "low": 0.01887,
+        "close": 0.01893,
+        "volume": 259733,
+        "time": "2022-05-16T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018935,
+        "high": 0.019095,
+        "low": 0.01888,
+        "close": 0.019035,
+        "volume": 203190,
+        "time": "2022-05-16T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019035,
+        "high": 0.01907,
+        "low": 0.018935,
+        "close": 0.01898,
+        "volume": 146832,
+        "time": "2022-05-16T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.018965,
+        "high": 0.019145,
+        "low": 0.018965,
+        "close": 0.01914,
+        "volume": 173650,
+        "time": "2022-05-16T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01914,
+        "high": 0.01914,
+        "low": 0.018955,
+        "close": 0.01904,
+        "volume": 241162,
+        "time": "2022-05-16T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01905,
+        "high": 0.019055,
+        "low": 0.018905,
+        "close": 0.019005,
+        "volume": 159696,
+        "time": "2022-05-16T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019005,
+        "high": 0.01904,
+        "low": 0.018905,
+        "close": 0.01895,
+        "volume": 157568,
+        "time": "2022-05-16T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01895,
+        "high": 0.01904,
+        "low": 0.018935,
+        "close": 0.01898,
+        "volume": 93130,
+        "time": "2022-05-16T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01918,
+        "high": 0.019215,
+        "low": 0.01901,
+        "close": 0.01914,
+        "volume": 610062,
+        "time": "2022-05-17T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01915,
+        "high": 0.01948,
+        "low": 0.01914,
+        "close": 0.019455,
+        "volume": 610664,
+        "time": "2022-05-17T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019455,
+        "high": 0.019455,
+        "low": 0.0193,
+        "close": 0.019335,
+        "volume": 309272,
+        "time": "2022-05-17T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01934,
+        "high": 0.019385,
+        "low": 0.01927,
+        "close": 0.01936,
+        "volume": 128593,
+        "time": "2022-05-17T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01936,
+        "high": 0.0194,
+        "low": 0.01932,
+        "close": 0.01934,
+        "volume": 117648,
+        "time": "2022-05-17T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019345,
+        "high": 0.019345,
+        "low": 0.01926,
+        "close": 0.019275,
+        "volume": 139581,
+        "time": "2022-05-17T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019275,
+        "high": 0.01942,
+        "low": 0.019255,
+        "close": 0.019375,
+        "volume": 282329,
+        "time": "2022-05-17T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019375,
+        "high": 0.019375,
+        "low": 0.01927,
+        "close": 0.019315,
+        "volume": 207821,
+        "time": "2022-05-17T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019325,
+        "high": 0.019415,
+        "low": 0.019305,
+        "close": 0.01933,
+        "volume": 274906,
+        "time": "2022-05-17T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019445,
+        "high": 0.019745,
+        "low": 0.019335,
+        "close": 0.0197,
+        "volume": 1127872,
+        "time": "2022-05-18T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019695,
+        "high": 0.01992,
+        "low": 0.019605,
+        "close": 0.019845,
+        "volume": 831447,
+        "time": "2022-05-18T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019845,
+        "high": 0.019895,
+        "low": 0.01966,
+        "close": 0.01972,
+        "volume": 299555,
+        "time": "2022-05-18T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01972,
+        "high": 0.01974,
+        "low": 0.019625,
+        "close": 0.01968,
+        "volume": 157693,
+        "time": "2022-05-18T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0197,
+        "high": 0.0197,
+        "low": 0.019605,
+        "close": 0.019635,
+        "volume": 149933,
+        "time": "2022-05-18T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01963,
+        "high": 0.01968,
+        "low": 0.019555,
+        "close": 0.019635,
+        "volume": 224021,
+        "time": "2022-05-18T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019615,
+        "high": 0.01965,
+        "low": 0.01946,
+        "close": 0.01946,
+        "volume": 226326,
+        "time": "2022-05-18T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01946,
+        "high": 0.01953,
+        "low": 0.01924,
+        "close": 0.019355,
+        "volume": 467370,
+        "time": "2022-05-18T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01935,
+        "high": 0.01935,
+        "low": 0.0192,
+        "close": 0.0192,
+        "volume": 262784,
+        "time": "2022-05-18T15:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.0192,
+        "high": 0.019275,
+        "low": 0.01891,
+        "close": 0.019135,
+        "volume": 628269,
+        "time": "2022-05-19T07:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019135,
+        "high": 0.01938,
+        "low": 0.01908,
+        "close": 0.01915,
+        "volume": 414196,
+        "time": "2022-05-19T08:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01914,
+        "high": 0.019225,
+        "low": 0.0191,
+        "close": 0.01918,
+        "volume": 102815,
+        "time": "2022-05-19T09:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019185,
+        "high": 0.019325,
+        "low": 0.019155,
+        "close": 0.019255,
+        "volume": 165176,
+        "time": "2022-05-19T10:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019255,
+        "high": 0.019285,
+        "low": 0.01912,
+        "close": 0.01913,
+        "volume": 108205,
+        "time": "2022-05-19T11:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019115,
+        "high": 0.01927,
+        "low": 0.0191,
+        "close": 0.019175,
+        "volume": 154616,
+        "time": "2022-05-19T12:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019175,
+        "high": 0.01926,
+        "low": 0.019145,
+        "close": 0.019205,
+        "volume": 96305,
+        "time": "2022-05-19T13:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.019205,
+        "high": 0.01927,
+        "low": 0.019165,
+        "close": 0.0192,
+        "volume": 96813,
+        "time": "2022-05-19T14:00:00.000Z",
+        "is_complete": true
+    },
+    {
+        "open": 0.01921,
+        "high": 0.019235,
+        "low": 0.01916,
+        "close": 0.01917,
+        "volume": 191935,
+        "time": "2022-05-19T15:00:00.000Z",
+        "is_complete": true
+    }
+];
+const { orders, equity } = {
+    "figi": "BBG004730ZJ9",
+    "ticker": "VTBR",
+    "orders": [
+        {
+            "id": "BBG004730ZJ9_2022-03-25T07:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 56543,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.01768557080094398,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-03-25T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-03-25T07:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 56543,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.016672379096659008,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-03-25T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-03-28T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-03-28T10:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 58910,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.0169650882534165,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-03-28T10:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-03-28T10:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 58910,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.017405380386581036,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-03-28T10:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-03-29T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-03-29T07:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 55974,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.017859627716171632,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-03-29T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-03-29T07:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 55974,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.01733810572219319,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-03-29T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-03-30T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-03-30T08:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 58864,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.016977946000652194,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-03-30T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-03-30T08:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 58864,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.01759581010871309,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-03-30T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-03-31T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-03-30T09:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 57814,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.017113297322788858,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-03-30T09:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-03-30T09:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 57814,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.017983404294702212,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-03-30T09:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-03-31T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-03-31T13:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51068,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019586682222750645,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-03-31T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-03-31T13:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51068,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.0200778678988629,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-03-31T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-01T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-01T09:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 48119,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.020792041789048244,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-01T09:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-01T09:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 48119,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.022522858102040907,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-01T09:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-04T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-04T07:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 43299,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.023126036020927925,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-04T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-04T07:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 43299,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.024433326286311136,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-04T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-05T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-05T11:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 43506,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.023028951203857766,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-05T11:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-05T11:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 43506,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.022002949776346377,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-05T11:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-06T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-05T14:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 42849,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.023148145607698317,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-05T14:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-05T14:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 42849,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.0216096569691207,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-05T14:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-06T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-05T15:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 42309,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.023209297419233655,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-05T15:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-05T15:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 42309,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.021256632242641554,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-05T15:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-06T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-06T13:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 44027,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.02271250057316718,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-06T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-06T13:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 44027,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.022399914728427516,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-06T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-07T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-07T07:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 45324,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.022059692926800725,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-07T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-07T07:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 45324,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.02258937459533842,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-07T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-08T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-07T10:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 43757,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.02262129976515359,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-07T10:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-07T10:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 43757,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.022875985252855675,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-07T10:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-08T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-07T11:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 43061,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.022757129912894695,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-07T11:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-07T11:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 43061,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.022691480444099753,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-07T11:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-08T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-07T12:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 42862,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.02263378900701282,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-07T12:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-07T12:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 42862,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.02319822352467647,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-07T12:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-08T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-07T13:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 42774,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.02245387408991486,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-07T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-07T13:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 42774,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.022672170250466733,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-07T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-08T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-08T15:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 44788,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.022338483731915125,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-08T15:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-08T15:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 44788,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.022227801504609814,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-08T15:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-11T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-11T12:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 45470,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.022002415515892625,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-11T12:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-11T12:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 45470,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.02132681569815348,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-11T12:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-12T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-11T14:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 45344,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.021842601407293247,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-11T14:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-11T14:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 45344,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.021068717808097905,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-11T14:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-12T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-12T07:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 46874,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.0213290444633219,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-12T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-12T07:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 46874,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.021224087705633454,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-12T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-13T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-13T08:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 46942,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.021297047766690856,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-13T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-13T08:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 46942,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.02096351556251948,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-13T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-14T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-13T09:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 47155,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.020988896154804815,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-13T09:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-13T09:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 47155,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.020756641626708684,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-13T09:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-14T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-14T15:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 49987,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.01999444907112429,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-14T15:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-14T15:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 49987,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.01970021300492168,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-14T15:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-15T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-15T14:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 49966,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019999934865804134,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-15T14:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-15T14:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 49966,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019973824846342535,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-15T14:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-18T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-18T07:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 49887,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.020031266358957744,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-18T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-18T07:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 49887,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.01894138886981871,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-18T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-19T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-18T08:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 49883,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.0198327581389401,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-18T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-18T08:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 49883,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.018931441760022164,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-18T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-19T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-18T09:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50260,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019487279811395513,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-18T09:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-18T09:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50260,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.018966758615873193,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-18T09:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-19T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-19T08:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 53615,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.01861523135754868,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-19T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-19T08:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 53615,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.018511705168482606,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-19T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-20T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-19T10:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 54005,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.018295865835207085,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-19T10:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-19T10:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 54005,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.018369778570996444,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-19T10:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-20T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-19T11:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 53959,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.018128267331493367,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-19T11:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-19T11:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 53959,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.018614052188914036,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-19T11:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-20T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-20T14:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52967,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.018847731133642687,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-20T14:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-20T14:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52967,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019050645142128692,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-20T14:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-21T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-21T08:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52744,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.01892912546723594,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-21T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-21T08:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52744,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.01907722896743584,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-21T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-22T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-21T13:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52336,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.018885957934723613,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-21T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-21T13:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52336,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019457213323505963,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-21T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-22T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-21T14:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52149,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.018764417177560725,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-21T14:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-21T14:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52149,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019209918896623195,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-21T14:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-22T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-25T08:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 54359,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.018377970664860743,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-25T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-25T08:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 54359,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.018387937768764167,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-25T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-26T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-26T07:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 55098,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.018131824902511966,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-26T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-26T07:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 55098,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.01972716383220972,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-26T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-27T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-27T07:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50893,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019647170740146255,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-27T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-27T07:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50893,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.020057271012177698,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-27T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-28T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-27T09:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51004,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019408175038247807,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-27T09:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-27T09:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51004,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.020233580513767672,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-27T09:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-28T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-28T07:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 49493,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.020215774848564707,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-28T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-28T07:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 49493,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019301872080303404,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-28T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-29T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-28T14:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51604,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019194841422590016,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-28T14:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-28T14:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51604,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019311813515751664,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-28T14:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-29T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-04-29T08:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51073,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.01958247935834434,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-29T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-04-29T08:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51073,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019924555496306624,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-04-29T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-04T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-04T11:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50917,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019645810550684033,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-04T11:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-04T11:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50917,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019877691927900808,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-04T11:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-05T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-04T12:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50108,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019763673865965236,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-04T12:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-04T12:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50108,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019851050030380596,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-04T12:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-05T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-05T07:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50670,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019745071313193946,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-05T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-05T07:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50670,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.01950174765746333,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-05T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-06T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-06T08:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51322,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019491808399244973,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-06T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-06T08:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51322,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.01967482704474873,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-06T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-11T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-06T12:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50785,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.01950096493310439,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-06T12:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-06T12:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50785,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019547801360642762,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-06T12:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-11T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-06T15:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50371,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019464428173684142,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-06T15:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-06T15:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50371,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019646129725385705,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-06T15:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-11T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-11T13:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51976,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.01925053747670548,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-11T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-11T13:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51976,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.0192422450372268,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-11T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-12T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-12T10:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52385,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.01909987673453901,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-12T10:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-12T10:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52385,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.01866183209437485,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-12T10:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-13T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-13T07:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 53171,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.018813491001787773,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-13T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-13T07:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 53171,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.018880425685906404,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-13T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-16T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-13T08:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 53419,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.01853894123023622,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-13T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-13T08:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 53419,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.018936929927184622,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-13T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-16T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-13T13:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52454,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.018690894257498737,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-13T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-13T13:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52454,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.018839021004869935,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-13T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-16T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-16T07:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52971,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.018890686711850284,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-16T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-16T07:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52971,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019063211127684613,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-16T07:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-17T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-16T13:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51999,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019051156833528864,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-16T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-16T13:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51999,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.01915935582056114,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-16T13:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-17T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-17T08:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52230,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.01916147040477577,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-17T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-17T08:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 52230,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019554716719554374,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-17T08:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-18T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-17T10:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51236,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019337782476196812,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-17T10:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-17T10:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 51236,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019609595470021307,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-17T10:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-18T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-17T12:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50917,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.01926445859508103,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-17T12:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-17T12:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50917,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019583699456020686,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-17T12:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-18T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-17T15:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50248,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019325546921194047,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-17T15:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-17T15:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50248,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.019665177397362302,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-17T15:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-18T07:00:00.000Z"
+            }
+        },
+        {
+            "id": "BBG004730ZJ9_2022-05-18T11:00:00.000Z_ORDER_DIRECTION_BUY",
+            "entry": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50901,
+                "direction": "ORDER_DIRECTION_BUY",
+                "price": 0.019675145856886386,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-18T11:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-18T11:00:00.000Z"
+            },
+            "close": {
+                "figi": "BBG004730ZJ9",
+                "quantity": 50901,
+                "direction": "ORDER_DIRECTION_SELL",
+                "price": 0.01923443261459098,
+                "order_type": "ORDER_TYPE_MARKET",
+                "order_id": "BBG004730ZJ9_2022-05-18T11:00:00.000Z_ORDER_DIRECTION_BUY",
+                "candleTime": "2022-05-19T07:00:00.000Z"
+            }
+        }
+    ],
+    "equity": [
+        {
+            "time": "2022-03-24T07:00:00.000Z",
+            "value": 100000
+        },
+        {
+            "time": "2022-03-25T07:00:00.000Z",
+            "value": 99000.00477020223
+        },
+        {
+            "time": "2022-03-28T10:00:00.000Z",
+            "value": 98943.29775245585
+        },
+        {
+            "time": "2022-03-29T07:00:00.000Z",
+            "value": 98968.97390924435
+        },
+        {
+            "time": "2022-03-30T08:00:00.000Z",
+            "value": 98940.06722555599
+        },
+        {
+            "time": "2022-03-30T09:00:00.000Z",
+            "value": 97950.67905413627
+        },
+        {
+            "time": "2022-03-31T13:00:00.000Z",
+            "value": 99025.87866851805
+        },
+        {
+            "time": "2022-04-01T09:00:00.000Z",
+            "value": 99050.72296752997
+        },
+        {
+            "time": "2022-04-04T07:00:00.000Z",
+            "value": 99133.16614287192
+        },
+        {
+            "time": "2022-04-05T11:00:00.000Z",
+            "value": 99189.20718666787
+        },
+        {
+            "time": "2022-04-05T14:00:00.000Z",
+            "value": 98197.3322955236
+        },
+        {
+            "time": "2022-04-05T15:00:00.000Z",
+            "value": 97215.37013101325
+        },
+        {
+            "time": "2022-04-06T13:00:00.000Z",
+            "value": 98997.96624627193
+        },
+        {
+            "time": "2022-04-07T07:00:00.000Z",
+            "value": 98984.33376980608
+        },
+        {
+            "time": "2022-04-07T10:00:00.000Z",
+            "value": 97994.49355598225
+        },
+        {
+            "time": "2022-04-07T11:00:00.000Z",
+            "value": 97014.54878480309
+        },
+        {
+            "time": "2022-04-07T12:00:00.000Z",
+            "value": 96044.4193203845
+        },
+        {
+            "time": "2022-04-07T13:00:00.000Z",
+            "value": 95083.97731006249
+        },
+        {
+            "time": "2022-04-08T15:00:00.000Z",
+            "value": 99049.52610795732
+        },
+        {
+            "time": "2022-04-11T12:00:00.000Z",
+            "value": 99044.61504823815
+        },
+        {
+            "time": "2022-04-11T14:00:00.000Z",
+            "value": 98054.18413002584
+        },
+        {
+            "time": "2022-04-12T07:00:00.000Z",
+            "value": 98979.47674993752
+        },
+        {
+            "time": "2022-04-13T08:00:00.000Z",
+            "value": 98974.60862078737
+        },
+        {
+            "time": "2022-04-13T09:00:00.000Z",
+            "value": 97984.87722260755
+        },
+        {
+            "time": "2022-04-14T15:00:00.000Z",
+            "value": 98948.26348033249
+        },
+        {
+            "time": "2022-04-15T14:00:00.000Z",
+            "value": 98933.70128230474
+        },
+        {
+            "time": "2022-04-18T07:00:00.000Z",
+            "value": 98932.41362972777
+        },
+        {
+            "time": "2022-04-18T08:00:00.000Z",
+            "value": 97943.09615548303
+        },
+        {
+            "time": "2022-04-18T09:00:00.000Z",
+            "value": 96963.66547216229
+        },
+        {
+            "time": "2022-04-19T08:00:00.000Z",
+            "value": 98808.16530682493
+        },
+        {
+            "time": "2022-04-19T10:00:00.000Z",
+            "value": 97820.09707239456
+        },
+        {
+            "time": "2022-04-19T11:00:00.000Z",
+            "value": 96841.91389545452
+        },
+        {
+            "time": "2022-04-20T14:00:00.000Z",
+            "value": 98832.56672689534
+        },
+        {
+            "time": "2022-04-21T08:00:00.000Z",
+            "value": 98843.22445449459
+        },
+        {
+            "time": "2022-04-21T13:00:00.000Z",
+            "value": 97854.80896002289
+        },
+        {
+            "time": "2022-04-21T14:00:00.000Z",
+            "value": 96876.26336863027
+        },
+        {
+            "time": "2022-04-25T08:00:00.000Z",
+            "value": 98903.55540295657
+        },
+        {
+            "time": "2022-04-26T07:00:00.000Z",
+            "value": 98904.0780236502
+        },
+        {
+            "time": "2022-04-27T07:00:00.000Z",
+            "value": 98991.10183599903
+        },
+        {
+            "time": "2022-04-27T09:00:00.000Z",
+            "value": 98001.20727634823
+        },
+        {
+            "time": "2022-04-28T07:00:00.000Z",
+            "value": 99053.43616591518
+        },
+        {
+            "time": "2022-04-28T14:00:00.000Z",
+            "value": 98062.90556914384
+        },
+        {
+            "time": "2022-04-29T08:00:00.000Z",
+            "value": 99014.64398041242
+        },
+        {
+            "time": "2022-05-04T11:00:00.000Z",
+            "value": 99031.94506746612
+        },
+        {
+            "time": "2022-05-04T12:00:00.000Z",
+            "value": 98041.62689739034
+        },
+        {
+            "time": "2022-05-05T07:00:00.000Z",
+            "value": 99047.95298876603
+        },
+        {
+            "time": "2022-05-06T08:00:00.000Z",
+            "value": 99035.74795190366
+        },
+        {
+            "time": "2022-05-06T12:00:00.000Z",
+            "value": 98045.39144777595
+        },
+        {
+            "time": "2022-05-06T15:00:00.000Z",
+            "value": 97064.94873623931
+        },
+        {
+            "time": "2022-05-11T13:00:00.000Z",
+            "value": 99056.46456643831
+        },
+        {
+            "time": "2022-05-12T10:00:00.000Z",
+            "value": 99056.0524517544
+        },
+        {
+            "time": "2022-05-13T07:00:00.000Z",
+            "value": 99033.32039596216
+        },
+        {
+            "time": "2022-05-13T08:00:00.000Z",
+            "value": 98042.98869438417
+        },
+        {
+            "time": "2022-05-13T13:00:00.000Z",
+            "value": 97062.57652700134
+        },
+        {
+            "time": "2022-05-16T07:00:00.000Z",
+            "value": 99065.58294290297
+        },
+        {
+            "time": "2022-05-16T13:00:00.000Z",
+            "value": 98074.9418387163
+        },
+        {
+            "time": "2022-05-17T08:00:00.000Z",
+            "value": 99080.20293943281
+        },
+        {
+            "time": "2022-05-17T10:00:00.000Z",
+            "value": 98089.4123164824
+        },
+        {
+            "time": "2022-05-17T12:00:00.000Z",
+            "value": 97108.52387819666
+        },
+        {
+            "time": "2022-05-17T15:00:00.000Z",
+            "value": 96137.4537965005
+        },
+        {
+            "time": "2022-05-18T11:00:00.000Z",
+            "value": 99147.30834406834
+        },
+        {
+            "time": "2022-05-19T15:00:00.000Z",
+            "value": 100126.36019858364
+        }
+    ]
+};
+</script>
+
+<script type="text/javascript" src="../reporter/candlestickChart.js"></script>
+<script type="text/javascript" src="equityCurve.js"></script>
+<script type="text/javascript" src="stats.js"></script>
+
+</body></html>

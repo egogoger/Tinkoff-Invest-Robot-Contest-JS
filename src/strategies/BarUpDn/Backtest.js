@@ -2,6 +2,7 @@ const BarUpDnStrategy = require('./Base');
 const { getRandomFloatInRange } = require('../../utils/math');
 const { differenceInMinutes } = require('date-fns');
 const { inverseOrderDirection } = require('../../utils/order');
+const { createReport } = require('../../reporter');
 
 // Поскольку мы уже знаем закрытую свечу, то цена позиции определяется как rand(low, high)
 class BarUpDnBackTest extends BarUpDnStrategy {
@@ -9,24 +10,25 @@ class BarUpDnBackTest extends BarUpDnStrategy {
     toDateKey = '2022-05-20';
     ticker = 'VTBR'; // https://www.tinkoff.ru/invest/stocks/VTBR/
     capital = 100000;
+    maxOrderDuration = 60 * 12;
+
+    equity = [];
     openOrders = [];
     closedOrders = [];
-    maxOrderDuration = 60 * 12;
 
     constructor(api) {
         super(api);
+        this.timeOfRun = new Date();
     }
 
     async start() {
-        const { figi } = await this.InstrumentsService.getShare(this.ticker);
-        const candlesFileName = this.bd.getFileNameForCachedCandles({
-            figi: figi,
-            ticker: this.ticker,
-            from: this.fromDateKey,
-            to: this.toDateKey,
-            candleInterval: this.candleInterval,
-        });
-        const candles = await this.loadCandles(candlesFileName, figi);
+        await this.loadInstrument();
+
+        const candles = await this.loadCandles();
+
+        return createReport('Отчёты', this.cachedCandlesFileName, 'BACKTEST__BarUpDn__2022-05-22T15:19:02.242Z');
+
+        this.logEquity(candles[0]);
 
         for (let i = 1; i < candles.length - 1; i++) {
             const prevCandle = candles[i - 1];
@@ -46,36 +48,49 @@ class BarUpDnBackTest extends BarUpDnStrategy {
             }
 
             const order = {
-                figi,
+                figi: this.figi,
                 quantity: lots,
                 direction: orderDirection,
                 price: lotPrice,
                 order_type: 'ORDER_TYPE_MARKET',
-                order_id: `${figi}_${currCandle.time}_${orderDirection}`,
+                order_id: `${this.figi}_${currCandle.time}_${orderDirection}`,
                 candleTime: currCandle.time,
             };
 
             this.executeOrder(order);
+
+            this.logEquity(currCandle);
         }
 
-        this.closeAllOrders(candles.slice(-1)[0]);
+        const lastCandle = candles[candles.length - 1];
 
-        this.saveResults(candlesFileName);
+        this.closeAllOrders(lastCandle);
+
+        this.logEquity(lastCandle);
+
+        this.saveResults();
+
+        createReport('Отчёты', this.cachedCandlesFileName, this.statsFileName);
     }
 
-    async loadCandles(candlesFileName, figi) {
-        let candles = this.bd.getCachedCandles(candlesFileName);
+    async loadInstrument() {
+        const share = await this.InstrumentsService.getShare(this.ticker);
+        this.figi = share.figi;
+    }
+
+    async loadCandles() {
+        let candles = this.bd.getCachedCandles(this.cachedCandlesFileName);
         console.log(candles ? `${candles.length} candles in db` : 'candles not in db');
 
         if (!candles || candles.length === 0) {
             candles = await this.MarketDataService.getCandles(
-                figi,
+                this.figi,
                 new Date(this.fromDateKey),
                 new Date(this.toDateKey),
                 this.candleInterval,
             );
             console.log(`loaded ${candles.length} candles`);
-            this.bd.save(candles, candlesFileName);
+            this.bd.save(candles, this.cachedCandlesFileName);
         }
 
         return candles;
@@ -136,13 +151,36 @@ class BarUpDnBackTest extends BarUpDnStrategy {
         });
     }
 
-    saveResults(cachedCandlesFileName) {
-        this.bd.save(this.closedOrders, `BACKTEST__${cachedCandlesFileName}__${new Date().toISOString()}`);
+    saveResults() {
+        this.bd.save(
+            {
+                figi: this.figi,
+                ticker: this.ticker,
+                orders: this.closedOrders,
+                equity: this.equity,
+            },
+            this.statsFileName,
+        );
     }
 
     closeAllOrders(lastCandle) {
         this.openOrders.forEach(openOrder => this.closeOrder(lastCandle, openOrder));
         this.openOrders = [];
+    }
+
+    logEquity(candle) {
+        this.equity.push({
+            time: candle.time,
+            value: this.capital,
+        });
+    }
+
+    get statsFileName() {
+        return `BACKTEST__BarUpDn__${this.timeOfRun.toISOString()}`;
+    }
+
+    get cachedCandlesFileName() {
+        return `${this.figi}__${this.ticker}__${this.fromDateKey}__${this.toDateKey}__${this.candleInterval}`;
     }
 }
 

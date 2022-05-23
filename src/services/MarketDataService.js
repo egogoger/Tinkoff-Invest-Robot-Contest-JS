@@ -1,5 +1,5 @@
 const { CandleIntervals, MaximumMinutesForCandlesRequest } = require('../types');
-const { addMinutes, differenceInMinutes, max: latestDate } = require('date-fns');
+const { addMinutes, differenceInMinutes, min: earliestDate } = require('date-fns');
 const { log } = require('../utils/logger');
 
 class MarketDataService {
@@ -94,9 +94,10 @@ class MarketDataService {
         const totalIntervalsAmount = Math.ceil(interval / maxMinutes);
         const intervals = [];
         for (let i = 0; i < totalIntervalsAmount; i++) {
+            const newFrom = addMinutes(from, i * maxMinutes);
             intervals.push({
-                from: latestDate([addMinutes(to, (i + 1) * -maxMinutes), from]),
-                to: addMinutes(to, i * -maxMinutes),
+                from: newFrom,
+                to: earliestDate([addMinutes(newFrom, maxMinutes), to]),
             });
         }
         return intervals;
