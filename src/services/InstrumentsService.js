@@ -22,7 +22,7 @@ class InstrumentsService {
     /**
      * Возвращает доступные инструменты для торговли
      * @param {'Etfs' | 'Shares' | 'Bonds'} name
-     * @returns {Promise<*>}
+     * @returns {Promise<[]>}
      */
     async getAvailable(name) {
         return (

@@ -5,7 +5,12 @@ class UsersService {
         this.api = api;
     }
 
-    async getAccountId(api, accName) {
+    /**
+     * Возвращает account_id
+     * @param {string} accName
+     * @return {Promise<string>}
+     */
+    async getAccountId(accName) {
         const accounts = (await log(this.api.Users.GetAccounts, 'api.Users.GetAccounts', {})).accounts;
         const acc = accName ? accounts.find(a => a.name === accName) : UsersService.availableAccounts(accounts)[0];
         if (!acc) throw new Error('no account');

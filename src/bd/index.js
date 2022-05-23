@@ -1,21 +1,23 @@
 const fs = require('fs');
 const path = require('path');
 
-const PATHS = {
-    STORAGE: 'storage',
-    BACKTEST: 'storage/backtest',
-    LIVE: 'storage/live',
-    SANDBOX: 'storage/sandbox',
-    CANDLES: 'storage/candles',
-};
-
 class bd {
     constructor() {
         this.ensureStorageDirs();
     }
 
+    get PATHS() {
+        return {
+            STORAGE: 'storage',
+            BACKTEST: 'storage/backtest',
+            LIVE: 'storage/live',
+            SANDBOX: 'storage/sandbox',
+            CANDLES: 'storage/candles',
+        };
+    }
+
     ensureStorageDirs() {
-        [PATHS.STORAGE, PATHS.BACKTEST, PATHS.LIVE, PATHS.SANDBOX, PATHS.CANDLES]
+        [this.PATHS.STORAGE, this.PATHS.BACKTEST, this.PATHS.LIVE, this.PATHS.SANDBOX, this.PATHS.CANDLES]
             .map(p => path.resolve(__dirname, p))
             .forEach(this.ensureDir);
     }
@@ -25,35 +27,42 @@ class bd {
     }
 
     getCachedCandles(fileName) {
-        const pathToFile = path.resolve(__dirname, `${PATHS.CANDLES}/${fileName}.json`);
+        const pathToFile = path.resolve(__dirname, `${this.PATHS.CANDLES}/${fileName}.json`);
 
         if (!fs.existsSync(pathToFile)) return undefined;
 
         return JSON.parse(fs.readFileSync(pathToFile, 'utf8'));
     }
 
-    saveCandles(data, fileName) {
-        this.save(data, `${PATHS.CANDLES}/${fileName}`);
-    }
-
-    saveBackTest(data, fileName) {
-        this.save(data, `${PATHS.BACKTEST}/${fileName}`);
-    }
-
-    saveSandbox(data, fileName) {
-        this.save(data, `${PATHS.SANDBOX}/${fileName}`);
-    }
-
-    saveLive(data, fileName) {
-        this.save(data, `${PATHS.LIVE}/${fileName}`);
-    }
-
-    save(data, pathToFile) {
-        const finalPath = path.resolve(__dirname, `${pathToFile}.json`);
+    /**
+     * Сохраняет в базу значение data
+     * @param data
+     * @param {string} dir
+     * @param {string} fileName
+     */
+    save(data, dir = '', fileName) {
+        const finalPath = path.resolve(__dirname, `${dir}/`, `${fileName}.json`);
 
         this.ensureDir(finalPath.slice(0, finalPath.lastIndexOf('/')));
 
         fs.writeFileSync(finalPath, JSON.stringify(data, null, 4));
+    }
+
+    /**
+     * Достает из базы данные по пути
+     * @param {string} dir
+     * @param {string} fileName
+     * @return any
+     */
+    get(dir, fileName) {
+        const finalPath = path.resolve(__dirname, `${dir}/`, `${fileName}.json`);
+
+        if (!fs.existsSync(finalPath)) {
+            console.log(finalPath, 'does not exist yet');
+            return undefined;
+        }
+
+        return JSON.parse(fs.readFileSync(finalPath, 'utf8'));
     }
 }
 

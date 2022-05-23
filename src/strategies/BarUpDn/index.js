@@ -25,9 +25,9 @@
         6. На одном инструменте одна позиция
 */
 
-// TODO: провести исследование на лучшую N в зависимости от акции, тренда, таймфрейма
 const BarUpDnSandbox = require('./Sandbox');
 const BarUpDnBackTest = require('./Backtest');
+const BarUpDnLive = require('./Live');
 
 async function run(api, mode) {
     switch (mode) {
@@ -38,8 +38,7 @@ async function run(api, mode) {
             return new BarUpDnBackTest(api).start();
         }
         case 'LIVE': {
-            // this.runLive();
-            break;
+            return new BarUpDnLive(api).start();
         }
     }
 }

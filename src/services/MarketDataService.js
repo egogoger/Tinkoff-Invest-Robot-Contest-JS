@@ -29,6 +29,11 @@ class MarketDataService {
         ).then(results => results.map(res => res.candles).flat());
     }
 
+    /**
+     * Возращает объект с последними ценами
+     * @param figi
+     * @returns {Promise<*>}
+     */
     async getLastPrices(figi) {
         return (await log(this.api.MarketData.GetLastPrices, 'api.MarketData.GetLastPrices', { figi })).last_prices;
     }

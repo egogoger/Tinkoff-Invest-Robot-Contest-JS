@@ -11,6 +11,7 @@ async function main() {
     const { token, mode, strategy } = parseArgs();
     const api = new tinkoff_v2({ token, appName: APP_NAME });
     strategiesMap[strategy](api, mode);
+    setInterval(() => {}, 1 << 30);
 }
 
 main();
